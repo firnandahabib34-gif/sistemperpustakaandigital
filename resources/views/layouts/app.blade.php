@@ -5,7 +5,20 @@
     <title>@yield('title')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-indigo-100 to-blue-200 min-h-screen flex items-center justify-center">
-    @yield('content')
+
+<body class="bg-gray-100">
+
+<div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    @include('layouts.sidebar_admin')
+
+    <!-- Content -->
+    <main class="flex-1 p-6">
+        @yield('content')
+    </main>
+
+</div>
+
 </body>
 </html>
