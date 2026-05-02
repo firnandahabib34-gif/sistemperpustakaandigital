@@ -45,21 +45,30 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
     const nim = document.getElementById('nim').value;
     const password = document.getElementById('password').value;
 
-    const users = [
-        { nim: '12345', password: '12345', role: 'mahasiswa' },
-        { nim: 'admin', password: 'admin', role: 'admin' }
-    ];
+    // Ambil data anggota dari localStorage
+    const anggotaList = JSON.parse(localStorage.getItem('anggota_list')) || [];
+    const user = anggotaList.find(u => u.nim === nim && u.password === password);
+    
+    // Cek admin (hardcoded)
+    const admin = (nim === 'admin' && password === 'admin');
 
-    const user = users.find(u => u.nim === nim && u.password === password);
-
-    if (!user) {
+    if (!user && !admin) {
         document.getElementById('error').innerText = 'NIM atau password salah';
         return;
     }
 
-    if (user.role === 'admin') {
+    // Cek status anggota (nonaktif tidak boleh login)
+    if (user && user.status === 'nonaktif') {
+        document.getElementById('error').innerText = 'Akun Anda sedang nonaktif. Hubungi admin.';
+        return;
+    }
+
+    // Simpan sesi login
+    if (admin) {
+        localStorage.setItem('logged_in', JSON.stringify({ nim: 'admin', role: 'admin' }));
         window.location.href = '/dashboard-admin';
     } else {
+        localStorage.setItem('logged_in', JSON.stringify({ nim: user.nim, role: 'anggota', name: user.name }));
         window.location.href = '/dashboard-anggota';
     }
 });
