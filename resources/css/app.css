@@ -1,11 +1,37 @@
-@import 'tailwindcss';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+/* custom style */
+.book-card {
+    @apply bg-white p-4 rounded-xl shadow;
+}
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+.books-grid {
+    @apply grid grid-cols-1 md:grid-cols-3 gap-4;
+}
+
+.modal {
+    @apply hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center;
+}
+
+.modal-content {
+    @apply bg-white p-6 rounded-xl w-full max-w-md rounded-2xl;
+}
+
+.btn-primary {
+    @apply bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600;
+}
+
+.btn-danger {
+    @apply bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600;
+}
+
+.form-group {
+    @apply mb-3;
+}
+
+.form-group input,
+.form-group select {
+    @apply w-full p-2 border rounded-lg;
 }
