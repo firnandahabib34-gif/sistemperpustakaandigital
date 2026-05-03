@@ -37,7 +37,7 @@
 // Ambil data user yang login
 const loggedInUser = JSON.parse(localStorage.getItem('logged_in'));
 
-// Inisialisasi data buku
+// Inisialisasi data buku (dengan penerbit & tahun)
 function initBooks() {
     let adminBooks = localStorage.getItem('admin_books');
     let anggotaBooks = localStorage.getItem('anggota_books');
@@ -48,17 +48,19 @@ function initBooks() {
             id: b.id,
             title: b.title,
             author: b.author,
-            category: "Teknologi",
-            stock: b.stock
+            category: b.category || "Teknologi",
+            stock: b.stock,
+            year: b.year,
+            penerbit: b.penerbit
         }))));
     }
     
     if (!localStorage.getItem('anggota_books')) {
         const defaultBooks = [
-            { id: 1, title: "Laravel 11", author: "Taylor Otwell", category: "Teknologi", stock: 5 },
-            { id: 2, title: "Tailwind CSS", author: "Adam Wathan", category: "Teknologi", stock: 3 },
-            { id: 3, title: "Pemrograman Web", author: "Sandhika Galih", category: "Teknologi", stock: 4 },
-            { id: 4, title: "Basis Data", author: "Rosa A.S.", category: "Teknologi", stock: 2 }
+            { id: 1, title: "Laravel 11", author: "Taylor Otwell", category: "Teknologi", stock: 5, year: 2024, penerbit: "O'Reilly Media" },
+            { id: 2, title: "Tailwind CSS", author: "Adam Wathan", category: "Teknologi", stock: 3, year: 2023, penerbit: "Tailwind Labs" },
+            { id: 3, title: "Pemrograman Web", author: "Sandhika Galih", category: "Teknologi", stock: 4, year: 2024, penerbit: "UNPAS Press" },
+            { id: 4, title: "Basis Data", author: "Rosa A.S.", category: "Teknologi", stock: 2, year: 2023, penerbit: "Informatika" }
         ];
         localStorage.setItem('anggota_books', JSON.stringify(defaultBooks));
     }
@@ -146,7 +148,10 @@ function renderBooks() {
             <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
                 <h3 class="font-bold text-lg">${escapeHtml(book.title)}</h3>
                 <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.author)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${book.category} | Stok: ${book.stock}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${book.category || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${book.penerbit || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.year || '-'}</p>
+                <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stock}</span></p>
                 
                 <button onclick="borrowBook(${book.id})" 
                     class="w-full mt-4 ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-2 rounded-lg transition"

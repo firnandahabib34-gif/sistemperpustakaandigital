@@ -5,10 +5,17 @@
 @section('content')
 
 <!-- Header -->
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">Dashboard Anggota</h1>
-    <p class="text-gray-500 text-sm">Selamat datang di perpustakaan digital</p>
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-bold">Dashboard Anggota</h1>
+        <p class="text-gray-500 text-sm">Selamat Datang Di Perpustakaan Digital</p>
+    </div>
+    <button onclick="showNotifications()" class="bg-white px-4 py-2 rounded-lg shadow flex items-center gap-2 hover:bg-gray-50 transition relative">
+        <i class="fas fa-bell"></i> Notifikasi
+        <span id="notifBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center hidden">0</span>
+    </button>
 </div>
+
 
 <!-- Statistik Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -63,7 +70,7 @@
                 <i class="fas fa-hand-holding-heart text-green-600 text-2xl"></i>
             </div>
             <div>
-                <h3 class="font-bold text-lg">Peminjaman Saya</h3>
+                <h3 class="font-bold text-lg">Peminjaman</h3>
                 <p class="text-gray-500 text-sm">Lihat status peminjaman</p>
             </div>
         </div>

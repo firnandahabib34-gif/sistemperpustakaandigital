@@ -4,10 +4,17 @@
 
 @section('content')
 
-<div class="mb-6">
-    <h1 class="text-2xl font-bold">Peminjaman</h1>
-    <p class="text-gray-500 text-sm">Daftar peminjaman buku Anda</p>
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h1 class="text-2xl font-bold">Peminjaman</h1>
+        <p class="text-gray-500 text-sm">Daftar Buku Ynag Anda Pinjam</p>
+    </div>
+    <button onclick="showNotifications()" class="bg-white px-4 py-2 rounded-lg shadow flex items-center gap-2 hover:bg-gray-50 transition relative">
+        <i class="fas fa-bell"></i> Notifikasi
+        <span id="notifBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center hidden">0</span>
+    </button>
 </div>
+
 
 <!-- Filter Status -->
 <div class="flex flex-wrap gap-2 mb-6">
