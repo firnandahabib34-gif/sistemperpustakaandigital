@@ -56,6 +56,15 @@ Route::get('/admin/pengembalian', function () {
     return view('admin.pengembalian.index');
 })->name('admin.pengembalian');
 
+// Halaman Kelola Kategori (Admin)
+Route::get('/admin/kategori', function () {
+    return view('admin.kategori.index');
+})->name('admin.kategori');
+
+Route::get('/admin/laporan', function () {
+    return view('admin.laporan.index');
+})->name('admin.laporan');
+
 // Dashboard Anggota (halaman statistik)
 Route::get('/dashboard-anggota', function () {
     return view('anggota.dashboard');

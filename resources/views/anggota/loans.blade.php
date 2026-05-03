@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="mb-6">
-    <h1 class="text-2xl font-bold">Peminjaman Saya</h1>
+    <h1 class="text-2xl font-bold">Peminjaman</h1>
     <p class="text-gray-500 text-sm">Daftar peminjaman buku Anda</p>
 </div>
 
