@@ -1,36 +1,81 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Landing page
 Route::get('/', function () {
     return view('landing');
 });
 
-// halaman login
+// Halaman Login
 Route::get('/login', function () {
     return view('auth.login');
 })->name('login');
 
-// proses login
-Route::post('/login', [AuthController::class, 'login'])->name('login.process');
+// Proses Login (dihandle oleh JavaScript, bukan backend)
+// Route::post('/login', [AuthController::class, 'login']); // ← HAPUS atau COMMENT
 
-//Logout
+// Logout
 Route::get('/logout', function () {
     return redirect('/login');
 })->name('logout');
 
-// halaman register
+// Halaman Register
 Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
 
-// Dashboard admin
+// Dashboard Admin
 Route::get('/dashboard-admin', function () {
     return view('admin.dashboard');
 });
 
-//Halaman management buku
+// Halaman Kelola Buku (Admin)
 Route::get('/admin/books', function () {
     return view('admin.books.index');
 })->name('admin.books');
+
+// Halaman Kelola Anggota (Admin)
+Route::get('/admin/anggota', function () {
+    return view('admin.anggota.index');
+})->name('admin.anggota');
+
+// Halaman Peminjaman (Admin)
+Route::get('/admin/loans', function () {
+    return view('admin.loans.index');
+})->name('admin.loans');
+
+// Halaman Pengembalian (Admin)
+Route::get('/admin/pengembalian', function () {
+    return view('admin.pengembalian.index');
+})->name('admin.pengembalian');
+
+// Halaman Kelola Kategori (Admin)
+Route::get('/admin/kategori', function () {
+    return view('admin.kategori.index');
+})->name('admin.kategori');
+
+Route::get('/admin/laporan', function () {
+    return view('admin.laporan.index');
+})->name('admin.laporan');
+
+// Dashboard Anggota (halaman statistik)
+Route::get('/dashboard-anggota', function () {
+    return view('anggota.dashboard');
+});
+
+// Koleksi Buku Anggota
+Route::get('/dashboard-anggota/buku', function () {
+    return view('anggota.buku');
+});
+
+// Peminjaman Saya (Anggota)
+Route::get('/dashboard-anggota/loans', function () {
+    return view('anggota.loans');
+})->name('anggota.loans');
