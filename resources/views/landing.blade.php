@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Library | Sistem Perpustakaan Digital</title>
     @vite(['resources/css/app.css', 'resources/js/app.js']) 
-    <!-- Tailwind CSS CDN -->
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -101,16 +100,16 @@
             
             <div class="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition text-center border border-gray-100">
                 <div class="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-users text-indigo-600 text-2xl"></i>
+                    <i class="fas fa-chart-line text-indigo-600 text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold mb-2">Kelola Anggota</h3>
-                <p class="text-gray-500">Admin dapat menambah, mengedit, menghapus dan melihat seluruh anggota perpustakaan.</p>
+                <h3 class="text-xl font-bold mb-2">Laporan Sirkulasi</h3>
+                <p class="text-gray-500">Admin dapat melihat statistik peminjaman dan riwayat buku.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Tim Pengembang Section -->
+<!-- Tim Pengembang Section (Disesuaikan dengan Tim PBL Anda) -->
 <section id="tentang" class="py-20 px-4 bg-gray-50">
     <div class="max-w-6xl mx-auto">
         <div class="text-center mb-12">
@@ -119,42 +118,48 @@
         </div>
         
         <div class="grid md:grid-cols-3 gap-6">
+            <!-- Member 1: Muhammad Mu'as -->
             <div class="bg-white p-6 rounded-2xl shadow-md text-center">
                 <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl">
                     <i class="fas fa-user-tie"></i>
                 </div>
-                <h3 class="text-lg font-bold">M. Fahreza R.</h3>
-                <p class="text-indigo-600 text-sm mb-2">Project Manager & Fullstack Dev</p>
-                <p class="text-gray-500 text-sm">Berpengalaman dalam pengembangan web fullstack dengan fokus pada performa dan keamanan aplikasi.</p>
+                <h3 class="text-lg font-bold">Muhammad Mu'as</h3>
+                <p class="text-indigo-600 text-sm mb-2">Frontend & Authentication</p>
+                <p class="text-gray-500 text-sm">Bertanggung jawab pada halaman landing, login, register, pengembalian buku, dan perhitungan denda otomatis.</p>
+                <p class="text-gray-400 text-xs mt-2">NIM: 3312511011</p>
                 <div class="flex justify-center gap-3 mt-4 text-gray-400">
                     <a href="#" class="hover:text-indigo-600"><i class="fab fa-github text-lg"></i></a>
                     <a href="#" class="hover:text-indigo-600"><i class="fab fa-linkedin text-lg"></i></a>
                 </div>
             </div>
             
+            <!-- Member 2: Firnanda Habib Nur Afian -->
             <div class="bg-white p-6 rounded-2xl shadow-md text-center">
                 <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl">
                     <i class="fas fa-laptop-code"></i>
                 </div>
-                <h3 class="text-lg font-bold">Aulia S. Putri</h3>
-                <p class="text-indigo-600 text-sm mb-2">UI/UX Designer & Frontend</p>
-                <p class="text-gray-500 text-sm">Mendesain antarmuka yang intuitif dan pengalaman pengguna yang menyenangkan.</p>
+                <h3 class="text-lg font-bold">Firnanda Habib N.A</h3>
+                <p class="text-indigo-600 text-sm mb-2">Backend & Admin Panel</p>
+                <p class="text-gray-500 text-sm">Bertanggung jawab pada dashboard admin, kelola buku, kelola kategori, peminjaman aktif, dan laporan sirkulasi.</p>
+                <p class="text-gray-400 text-xs mt-2">NIM: 3312511006</p>
                 <div class="flex justify-center gap-3 mt-4 text-gray-400">
-                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-dribbble text-lg"></i></a>
-                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-behance text-lg"></i></a>
+                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-github text-lg"></i></a>
+                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-linkedin text-lg"></i></a>
                 </div>
             </div>
             
+            <!-- Member 3: M. Khairil Candra -->
             <div class="bg-white p-6 rounded-2xl shadow-md text-center">
                 <div class="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-3xl">
                     <i class="fas fa-database"></i>
                 </div>
-                <h3 class="text-lg font-bold">Rizki Hidayat</h3>
-                <p class="text-indigo-600 text-sm mb-2">Backend Developer</p>
-                <p class="text-gray-500 text-sm">Mengembangkan sistem backend yang handal, scalable, dan aman untuk aplikasi perpustakaan.</p>
+                <h3 class="text-lg font-bold">M. Khairil Candra</h3>
+                <p class="text-indigo-600 text-sm mb-2">Frontend & Member Panel</p>
+                <p class="text-gray-500 text-sm">Bertanggung jawab pada dashboard anggota, koleksi buku, peminjaman buku, riwayat peminjaman, dan notifikasi denda.</p>
+                <p class="text-gray-400 text-xs mt-2">NIM: 3312511014</p>
                 <div class="flex justify-center gap-3 mt-4 text-gray-400">
                     <a href="#" class="hover:text-indigo-600"><i class="fab fa-github text-lg"></i></a>
-                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-stack-overflow text-lg"></i></a>
+                    <a href="#" class="hover:text-indigo-600"><i class="fab fa-linkedin text-lg"></i></a>
                 </div>
             </div>
         </div>
@@ -176,26 +181,17 @@
                         <i class="fas fa-map-marker-alt text-indigo-600"></i>
                     </div>
                     <div>
-                        <h4 class="font-semibold">Alamat Kantor</h4>
-                        <p class="text-gray-500 text-sm">Jl. Teknologi No. 123, Bandung, Jawa Barat</p>
+                        <h4 class="font-semibold">Alamat Kampus</h4>
+                        <p class="text-gray-500 text-sm">Politeknik Negeri Batam, Jl. Ahmad Yani, Batam, Kepulauan Riau</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-4 mb-6">
                     <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                        <i class="fas fa-phone-alt text-indigo-600"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold">Telepon / WA</h4>
-                        <p class="text-gray-500 text-sm">+62 812 3456 7890</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
                         <i class="fas fa-envelope text-indigo-600"></i>
                     </div>
                     <div>
-                        <h4 class="font-semibold">Email Resmi</h4>
-                        <p class="text-gray-500 text-sm">support@elibrary.id</p>
+                        <h4 class="font-semibold">Email Tim</h4>
+                        <p class="text-gray-500 text-sm">if-2ma-02@polibatam.ac.id</p>
                     </div>
                 </div>
             </div>
@@ -227,7 +223,8 @@
         <i class="fas fa-landmark text-indigo-400 text-xl"></i>
         <span class="text-white font-bold">E-Library</span>
     </div>
-    <p class="text-sm">Sistem Perpustakaan Digital Terintegrasi | Copyright © 2026 E-Library Team</p>
+    <p class="text-sm">Sistem Perpustakaan Digital Terintegrasi | Copyright © 2026 Tim PBL IF-2MA-02</p>
+    <p class="text-xs text-gray-500 mt-1">Politeknik Negeri Batam</p>
 </footer>
 
 <script>
