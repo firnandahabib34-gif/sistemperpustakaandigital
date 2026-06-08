@@ -33,11 +33,14 @@
         </nav>
     </div>
     
-    <!-- Tombol Keluar di bawah (mt-auto) -->
+    <!-- Tombol Keluar dengan POST -->
     <div class="p-5 border-t border-blue-500">
-        <a href="/login" class="flex items-center gap-3 px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition w-full">
-            <i class="fas fa-sign-out-alt w-5"></i> Keluar
-        </a>
+        <form method="POST" action="{{ route('logout') }}" class="w-full">
+            @csrf
+            <button type="submit" class="flex items-center justify-center gap-2 px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition w-full">
+                <i class="fas fa-sign-out-alt"></i> Keluar
+            </button>
+        </form>
     </div>
 </aside>
 

@@ -17,7 +17,7 @@
         </div>
 
         <nav class="space-y-1">
-            <div class="text-white-200 text-xs mb-2">MAIN MENU</div>
+            <div class="text-blue-200 text-xs mb-2">MAIN MENU</div>
             
             <a href="/dashboard-admin" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-admin') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tachometer-alt w-5"></i> Dashboard
@@ -27,7 +27,7 @@
                 <i class="fas fa-book w-5"></i> Kelola Buku
             </a>
             
-            <a href="/admin/anggota" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/anggota') ? 'bg-blue-600' : '' }}">
+            <a href="{{ route('admin.anggota') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->routeIs('admin.anggota*') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-users w-5"></i> Kelola Anggota
             </a>
             
@@ -46,14 +46,16 @@
             <a href="/admin/laporan" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/laporan') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-chart-line w-5"></i> Laporan
             </a>
-
         </nav>
     </div>
     
-    <!-- Tombol Keluar di bawah (paling bawah) -->
+    <!-- Tombol Keluar dengan POST -->
     <div class="p-5 border-t border-blue-500">
-        <a href="/login" class="flex items-center justify-center gap-2 px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition w-full">
-            <i class="fas fa-sign-out-alt"></i> Keluar
-        </a>
+        <form method="POST" action="{{ route('logout') }}" class="w-full">
+            @csrf
+            <button type="submit" class="flex items-center justify-center gap-2 px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition w-full">
+                <i class="fas fa-sign-out-alt"></i> Keluar
+            </button>
+        </form>
     </div>
 </aside>

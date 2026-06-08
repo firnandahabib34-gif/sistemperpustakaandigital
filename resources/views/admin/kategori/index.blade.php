@@ -46,61 +46,59 @@
         </div>
         
         <div class="p-6">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Nama Kategori *</label>
-                <input id="nama" type="text" placeholder="Contoh: Teknologi, Fiksi, Matematika" 
-                    class="w-full p-2 border rounded-lg">
-            </div>
+            <form id="kategoriForm">
+                <input type="hidden" id="kategoriId" name="kategori_id">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Nama Kategori *</label>
+                    <input id="nama" type="text" placeholder="Contoh: Teknologi, Fiksi, Matematika" 
+                        class="w-full p-2 border rounded-lg" required>
+                </div>
 
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Deskripsi</label>
-                <textarea id="deskripsi" rows="3" placeholder="Deskripsi kategori (opsional)" 
-                    class="w-full p-2 border rounded-lg"></textarea>
-            </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Deskripsi</label>
+                    <textarea id="deskripsi" rows="3" placeholder="Deskripsi kategori (opsional)" 
+                        class="w-full p-2 border rounded-lg"></textarea>
+                </div>
 
-            <div class="flex gap-2">
-                <button onclick="saveKategori()" class="bg-indigo-500 text-white px-4 py-2 rounded-lg w-full hover:bg-indigo-600 transition">
-                    Simpan
-                </button>
-                <button onclick="closeModal()" class="bg-gray-400 text-white px-4 py-2 rounded-lg w-full hover:bg-gray-500 transition">
-                    Batal
-                </button>
-            </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="bg-indigo-500 text-white px-4 py-2 rounded-lg w-full hover:bg-indigo-600 transition">
+                        Simpan
+                    </button>
+                    <button type="button" onclick="closeModal()" class="bg-gray-400 text-white px-4 py-2 rounded-lg w-full hover:bg-gray-500 transition">
+                        Batal
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-// Data kategori
-let kategoris = JSON.parse(localStorage.getItem('admin_kategoris')) || [
-    { id: 1, nama: "Teknologi", deskripsi: "Buku tentang teknologi dan programming" },
-    { id: 2, nama: "Matematika", deskripsi: "Buku matematika dasar hingga lanjut" },
-    { id: 3, nama: "Fisika", deskripsi: "Buku fisika dan ilmu alam" },
-    { id: 4, nama: "Kimia", deskripsi: "Buku kimia dasar dan praktikum" },
-    { id: 5, nama: "Bahasa", deskripsi: "Buku bahasa Indonesia dan Inggris" }
-];
-
+let categories = [];
 let editId = null;
 
-function saveToStorage() {
-    localStorage.setItem('admin_kategoris', JSON.stringify(kategoris));
-    // Sinkron ke pilihan kategori di form buku
-    syncKategoriToBooks();
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+// Load data kategori dari database
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        categories = await response.json();
+        renderKategori();
+    } catch (error) {
+        console.error('Gagal load kategori:', error);
+    }
 }
 
-function syncKategoriToBooks() {
-    const kategoriOptions = kategoris.map(k => k.nama);
-    localStorage.setItem('kategori_options', JSON.stringify(kategoriOptions));
-}
-
-function renderKategoris() {
+function renderKategori() {
     const search = document.getElementById('search').value.toLowerCase();
     const tbody = document.getElementById('kategoriTable');
     if (!tbody) return;
     
     tbody.innerHTML = "";
 
-    const filtered = kategoris.filter(k => 
+    const filtered = categories.filter(k => 
         k.nama.toLowerCase().includes(search)
     );
 
@@ -146,6 +144,7 @@ function escapeHtml(str) {
 
 function openModal() {
     editId = null;
+    document.getElementById('kategoriId').value = '';
     document.getElementById('nama').value = '';
     document.getElementById('deskripsi').value = '';
     document.getElementById('modalTitle').innerText = 'Tambah Kategori';
@@ -158,7 +157,10 @@ function closeModal() {
     document.body.style.overflow = 'auto';
 }
 
-function saveKategori() {
+// Submit form
+document.getElementById('kategoriForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
     const nama = document.getElementById('nama').value.trim();
     const deskripsi = document.getElementById('deskripsi').value.trim();
 
@@ -167,62 +169,89 @@ function saveKategori() {
         return;
     }
 
+    let url, method, body;
+
     if (editId) {
-        let kategori = kategoris.find(k => k.id === editId);
-        if (kategori) {
-            kategori.nama = nama;
-            kategori.deskripsi = deskripsi;
-        }
+        url = `/admin/kategori/${editId}`;
+        method = 'PUT';
+        body = { nama, deskripsi, _method: 'PUT' };
     } else {
-        // Cek duplikat
-        const existing = kategoris.find(k => k.nama.toLowerCase() === nama.toLowerCase());
-        if (existing) {
-            alert(`Kategori "${nama}" sudah ada!`);
-            return;
-        }
-        
-        kategoris.push({
-            id: Date.now(),
-            nama: nama,
-            deskripsi: deskripsi
-        });
+        url = '/admin/kategori';
+        method = 'POST';
+        body = { nama, deskripsi };
     }
 
-    saveToStorage();
-    closeModal();
-    renderKategoris();
-    alert(editId ? '✅ Kategori berhasil diupdate!' : '✅ Kategori berhasil ditambahkan!');
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(body)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(editId ? '✅ Kategori berhasil diupdate!' : '✅ Kategori berhasil ditambahkan!');
+            closeModal();
+            loadCategories(); // Refresh data
+        } else {
+            alert('❌ Gagal menyimpan kategori: ' + (result.message || 'Terjadi kesalahan'));
+        }
+    } catch (error) {
+        alert('❌ Terjadi kesalahan: ' + error.message);
+    }
+});
+
+async function editKategori(id) {
+    try {
+        const response = await fetch(`/admin/kategori/${id}/edit`);
+        const kategori = await response.json();
+
+        document.getElementById('kategoriId').value = kategori.id;
+        document.getElementById('nama').value = kategori.nama;
+        document.getElementById('deskripsi').value = kategori.deskripsi || '';
+
+        editId = id;
+        document.getElementById('modalTitle').innerText = 'Edit Kategori';
+        document.getElementById('modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } catch (error) {
+        alert('Gagal mengambil data kategori');
+    }
 }
 
-function editKategori(id) {
-    const kategori = kategoris.find(k => k.id === id);
-    if (!kategori) return;
-
-    document.getElementById('nama').value = kategori.nama;
-    document.getElementById('deskripsi').value = kategori.deskripsi || '';
-
-    editId = id;
-    document.getElementById('modalTitle').innerText = 'Edit Kategori';
-    document.getElementById('modal').classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-}
-
-function deleteKategori(id) {
-    const kategori = kategoris.find(k => k.id === id);
+async function deleteKategori(id) {
+    const kategori = categories.find(k => k.id === id);
     if (confirm(`Yakin ingin menghapus kategori "${kategori?.nama}"?`)) {
-        kategoris = kategoris.filter(k => k.id !== id);
-        saveToStorage();
-        renderKategoris();
-        alert('🗑️ Kategori berhasil dihapus!');
+        try {
+            const response = await fetch(`/admin/kategori/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
+
+            if (response.ok) {
+                alert('🗑️ Kategori berhasil dihapus!');
+                loadCategories(); // Refresh data
+            } else {
+                alert('❌ Gagal menghapus kategori');
+            }
+        } catch (error) {
+            alert('❌ Terjadi kesalahan: ' + error.message);
+        }
     }
 }
 
 // Search event
-document.getElementById('search').addEventListener('input', renderKategoris);
+document.getElementById('search').addEventListener('input', renderKategori);
 
-// Initial render
-syncKategoriToBooks();
-renderKategoris();
+// Load data awal
+loadCategories();
 </script>
 
 @endsection

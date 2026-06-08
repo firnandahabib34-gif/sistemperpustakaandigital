@@ -14,54 +14,62 @@
     <div id="error" class="hidden bg-red-100 text-red-700 text-sm p-2 rounded mb-4"></div>
     <div id="success" class="hidden bg-green-100 text-green-700 text-sm p-2 rounded mb-4"></div>
 
-    <form id="registerForm" class="space-y-4">
+   <form method="POST" action="{{ route('register.process') }}" class="space-y-4">
+    @csrf
+    
+    <div>
+        <label class="block text-sm text-gray-700">NIM *</label>
+        <input type="text" name="nim" value="{{ old('nim') }}" 
+            class="w-full mt-1 p-2 border rounded-lg @error('nim') border-red-500 @enderror" required>
+        @error('nim') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">NIM *</label>
-            <input type="text" id="nim" class="w-full mt-1 p-2 border rounded-lg" required>
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">Nama Lengkap *</label>
+        <input type="text" name="name" value="{{ old('name') }}" 
+            class="w-full mt-1 p-2 border rounded-lg @error('name') border-red-500 @enderror" required>
+        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">Nama Lengkap *</label>
-            <input type="text" id="name" class="w-full mt-1 p-2 border rounded-lg" required>
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">Email *</label>
+        <input type="email" name="email" value="{{ old('email') }}" 
+            class="w-full mt-1 p-2 border rounded-lg @error('email') border-red-500 @enderror" required>
+        @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">Email</label>
-            <input type="email" id="email" class="w-full mt-1 p-2 border rounded-lg">
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">No Telepon</label>
+        <input type="text" name="phone" value="{{ old('phone') }}" 
+            class="w-full mt-1 p-2 border rounded-lg">
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">No Telepon</label>
-            <input type="text" id="phone" class="w-full mt-1 p-2 border rounded-lg">
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">Program Studi</label>
+        <select name="prodi" class="w-full mt-1 p-2 border rounded-lg">
+            <option value="">Pilih Program Studi</option>
+            <option value="Teknik Informatika">Teknik Informatika</option>
+            <option value="Sistem Informasi">Sistem Informasi</option>
+            <option value="Teknik Komputer">Teknik Komputer</option>
+            <option value="Manajemen Informatika">Manajemen Informatika</option>
+        </select>
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">Program Studi</label>
-            <select id="prodi" class="w-full mt-1 p-2 border rounded-lg">
-                <option value="">Pilih Program Studi</option>
-                <option value="Teknik Informatika">Teknik Informatika</option>
-                <option value="Sistem Informasi">Sistem Informasi</option>
-                <option value="Teknik Komputer">Teknik Komputer</option>
-                <option value="Manajemen Informatika">Manajemen Informatika</option>
-            </select>
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">Password *</label>
+        <input type="password" name="password" class="w-full mt-1 p-2 border rounded-lg @error('password') border-red-500 @enderror" required>
+        @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">Password *</label>
-            <input type="password" id="password" class="w-full mt-1 p-2 border rounded-lg" required>
-        </div>
+    <div>
+        <label class="block text-sm text-gray-700">Konfirmasi Password *</label>
+        <input type="password" name="password_confirmation" class="w-full mt-1 p-2 border rounded-lg" required>
+    </div>
 
-        <div>
-            <label class="block text-sm text-gray-700">Konfirmasi Password *</label>
-            <input type="password" id="password_confirmation" class="w-full mt-1 p-2 border rounded-lg" required>
-        </div>
-
-        <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
-            Daftar
-        </button>
-
-    </form>
+    <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition">
+        Daftar
+    </button>
+</form>
 
     <div class="text-center mt-4 text-sm text-gray-500">
         Sudah punya akun?
