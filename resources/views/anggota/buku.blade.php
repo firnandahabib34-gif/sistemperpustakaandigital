@@ -34,57 +34,35 @@
 </div>
 
 <script>
-// Ambil data user yang login
-const loggedInUser = JSON.parse(localStorage.getItem('logged_in'));
+// CSRF Token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-// Inisialisasi data buku (dengan penerbit & tahun)
-function initBooks() {
-    let adminBooks = localStorage.getItem('admin_books');
-    let anggotaBooks = localStorage.getItem('anggota_books');
-    
-    if (adminBooks && !anggotaBooks) {
-        const books = JSON.parse(adminBooks);
-        localStorage.setItem('anggota_books', JSON.stringify(books.map(b => ({
-            id: b.id,
-            title: b.title,
-            author: b.author,
-            category: b.category || "Teknologi",
-            stock: b.stock,
-            year: b.year,
-            penerbit: b.penerbit
-        }))));
-    }
-    
-    if (!localStorage.getItem('anggota_books')) {
-        const defaultBooks = [
-            { id: 1, title: "Laravel 11", author: "Taylor Otwell", category: "Teknologi", stock: 5, year: 2024, penerbit: "O'Reilly Media" },
-            { id: 2, title: "Tailwind CSS", author: "Adam Wathan", category: "Teknologi", stock: 3, year: 2023, penerbit: "Tailwind Labs" },
-            { id: 3, title: "Pemrograman Web", author: "Sandhika Galih", category: "Teknologi", stock: 4, year: 2024, penerbit: "UNPAS Press" },
-            { id: 4, title: "Basis Data", author: "Rosa A.S.", category: "Teknologi", stock: 2, year: 2023, penerbit: "Informatika" }
-        ];
-        localStorage.setItem('anggota_books', JSON.stringify(defaultBooks));
+// Data dari database (dikirim dari controller)
+let books = @json($books);
+let loans = [];
+let notifications = [];
+
+// Ambil data peminjaman dari database
+async function loadLoans() {
+    try {
+        const response = await fetch('/api/anggota/loans');
+        loans = await response.json();
+        updateNotifBadge();
+        renderBooks(); // Re-render setelah data loans berubah
+    } catch (error) {
+        console.error('Gagal load loans:', error);
     }
 }
 
-let books = JSON.parse(localStorage.getItem('anggota_books')) || [];
-let loans = JSON.parse(localStorage.getItem('anggota_loans')) || [];
-let notifications = JSON.parse(localStorage.getItem('anggota_notifications')) || [];
-
-function saveToStorage() {
-    localStorage.setItem('anggota_books', JSON.stringify(books));
-    localStorage.setItem('anggota_loans', JSON.stringify(loans));
-    localStorage.setItem('anggota_notifications', JSON.stringify(notifications));
-}
-
-function addNotification(message) {
-    notifications.unshift({
-        id: Date.now(),
-        message: message,
-        created_at: new Date().toLocaleString()
-    });
-    if (notifications.length > 10) notifications.pop();
-    saveToStorage();
-    updateNotifBadge();
+// Ambil notifikasi
+async function loadNotifications() {
+    try {
+        const response = await fetch('/api/anggota/notifications');
+        notifications = await response.json();
+        updateNotifBadge();
+    } catch (error) {
+        console.error('Gagal load notifikasi:', error);
+    }
 }
 
 function updateNotifBadge() {
@@ -108,7 +86,7 @@ function showNotifications() {
     
     let msg = '🔔 NOTIFIKASI\n\n';
     notifications.forEach(n => {
-        msg += `📌 ${n.message}\n   📅 ${n.created_at}\n\n`;
+        msg += `📌 ${n.message}\n   📅 ${new Date(n.created_at).toLocaleString()}\n\n`;
     });
     alert(msg);
 }
@@ -123,6 +101,45 @@ function escapeHtml(str) {
     });
 }
 
+// Fungsi pinjam buku via AJAX
+async function pinjamBuku(bookId) {
+    console.log('Tombol diklik, bookId:', bookId); // Cek apakah fungsi terpanggil
+    
+    try {
+        const response = await fetch(`/pinjam/${bookId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+        console.log('Response:', result); // Cek response dari server
+
+        if (response.ok) {
+            alert('✅ ' + result.message);
+            location.reload(); // Refresh halaman
+        } else {
+            alert('❌ ' + (result.message || 'Gagal meminjam buku'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Terjadi kesalahan: ' + error.message);
+    }
+}
+// Ambil data buku terbaru
+async function loadBooks() {
+    try {
+        const response = await fetch('/api/books');
+        books = await response.json();
+        renderBooks();
+    } catch (error) {
+        console.error('Gagal load buku:', error);
+    }
+}
+
 function renderBooks() {
     const searchValue = document.getElementById('search').value.toLowerCase();
     const grid = document.getElementById('booksGrid');
@@ -131,8 +148,8 @@ function renderBooks() {
     grid.innerHTML = "";
 
     const filteredBooks = books.filter(b => 
-        b.title.toLowerCase().includes(searchValue) || 
-        b.author.toLowerCase().includes(searchValue)
+        (b.judul && b.judul.toLowerCase().includes(searchValue)) || 
+        (b.penulis && b.penulis.toLowerCase().includes(searchValue))
     );
 
     if (filteredBooks.length === 0) {
@@ -141,120 +158,43 @@ function renderBooks() {
     }
 
     filteredBooks.forEach(book => {
-        const alreadyBorrowed = loans.some(l => l.bookId === book.id && l.status === 'dipinjam');
-        const available = book.stock > 0 && !alreadyBorrowed;
+        const alreadyBorrowed = loans.some(l => l.book_id === book.id && (l.status === 'dipinjam' || l.status === 'menunggu'));
+        const available = book.stok > 0 && !alreadyBorrowed;
+        const kategoriNama = book.category ? book.category.nama : '-';
         
         grid.innerHTML += `
             <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
-                <h3 class="font-bold text-lg">${escapeHtml(book.title)}</h3>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.author)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${book.category || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${book.penerbit || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.year || '-'}</p>
-                <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stock}</span></p>
+                <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
+                <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
                 
-                <button onclick="borrowBook(${book.id})" 
+                <button onclick="pinjamBuku(${book.id})" 
                     class="w-full mt-4 ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-2 rounded-lg transition"
                     ${!available ? 'disabled' : ''}>
-                    ${alreadyBorrowed ? '📌 Sedang Dipinjam' : (book.stock > 0 ? '📖 Ajukan Peminjaman' : '❌ Stok Habis')}
+                    ${alreadyBorrowed ? '📌 Sedang Dipinjam/Menunggu' : (book.stok > 0 ? '📖 Ajukan Peminjaman' : '❌ Stok Habis')}
                 </button>
             </div>
         `;
     });
 }
 
-function borrowBook(bookId) {
-    const book = books.find(b => b.id === bookId);
-    const alreadyBorrowed = loans.some(l => l.bookId === bookId && l.status === 'dipinjam');
-    
-    if (!book || book.stock <= 0 || alreadyBorrowed) {
-        alert('Buku tidak tersedia untuk dipinjam!');
-        return;
-    }
-    
-    if (confirm(`Ajukan pinjaman buku "${book.title}"?`)) {
-        book.stock--;
-        localStorage.setItem('anggota_books', JSON.stringify(books));
-        
-        // Sinkron ke admin books
-        let adminBooks = JSON.parse(localStorage.getItem('admin_books')) || [];
-        const adminBook = adminBooks.find(b => b.id === bookId);
-        if (adminBook) adminBook.stock = book.stock;
-        localStorage.setItem('admin_books', JSON.stringify(adminBooks));
-        
-        const borrowDate = new Date();
-        const dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 7);
-        
-        const newLoan = {
-            id: Date.now(),
-            bookId: book.id,
-            title: book.title,
-            nim: loggedInUser?.nim || '20230001',
-            userName: loggedInUser?.name || 'Anggota',
-            borrowDate: borrowDate.toISOString(),
-            dueDate: dueDate.toISOString(),
-            status: 'menunggu',
-            denda: 0
-        };
-        
-        loans.push(newLoan);
-        
-        // Sinkron ke admin loans
-        let adminLoans = JSON.parse(localStorage.getItem('admin_loans')) || [];
-        adminLoans.push(newLoan);
-        localStorage.setItem('admin_loans', JSON.stringify(adminLoans));
-        
-        addNotification(`📖 Pengajuan pinjaman buku "${book.title}" berhasil dikirim. Menunggu persetujuan admin.`);
-        
-        saveToStorage();
-        renderBooks();
-        alert(`✅ Pengajuan pinjaman "${book.title}" berhasil! Menunggu persetujuan admin.`);
-    }
-}
+// Event listener search
+document.getElementById('search').addEventListener('input', renderBooks);
 
-// Sinkron status dari admin
-function syncFromAdmin() {
-    const adminLoans = JSON.parse(localStorage.getItem('admin_loans')) || [];
-    let updated = false;
-    
-    adminLoans.forEach(adminLoan => {
-        const myLoan = loans.find(l => l.id === adminLoan.id && l.nim === loggedInUser?.nim);
-        if (myLoan && myLoan.status !== adminLoan.status) {
-            myLoan.status = adminLoan.status;
-            myLoan.denda = adminLoan.denda || 0;
-            updated = true;
-            
-            if (adminLoan.status === 'dipinjam') {
-                addNotification(`✅ Peminjaman buku "${myLoan.title}" telah disetujui! Jatuh tempo: ${new Date(myLoan.dueDate).toLocaleDateString('id-ID')}`);
-            } else if (adminLoan.status === 'ditolak') {
-                const book = books.find(b => b.id === myLoan.bookId);
-                if (book) book.stock++;
-                addNotification(`❌ Peminjaman buku "${myLoan.title}" ditolak oleh admin.`);
-            }
-        }
-    });
-    
-    if (updated) {
-        saveToStorage();
-        renderBooks();
-    }
-}
-
-// ========== PEMINJAMAN SAYA (MODAL) ==========
+// Fungsi untuk modal peminjaman saya
 function showMyLoans() {
     const modal = document.getElementById('loansModal');
     const loansList = document.getElementById('loansList');
     
     if (!modal || !loansList) return;
     
-    const loans = JSON.parse(localStorage.getItem('anggota_loans')) || [];
-    const myLoans = loans.filter(l => l.nim === loggedInUser?.nim);
-    
-    if (myLoans.length === 0) {
+    if (loans.length === 0) {
         loansList.innerHTML = '<p class="text-center text-gray-500 py-4">📭 Belum ada peminjaman</p>';
     } else {
-        loansList.innerHTML = myLoans.map(loan => {
+        loansList.innerHTML = loans.map(loan => {
             const statusClass = {
                 'menunggu': 'bg-yellow-100 text-yellow-700',
                 'dipinjam': 'bg-blue-100 text-blue-700',
@@ -271,13 +211,13 @@ function showMyLoans() {
             
             return `
                 <div class="border p-3 rounded-lg">
-                    <div class="font-bold">📖 ${loan.title}</div>
-                    <div class="text-sm text-gray-500 mt-1">📅 Pinjam: ${new Date(loan.borrowDate).toLocaleDateString('id-ID')}</div>
-                    <div class="text-sm text-gray-500">⏰ Jatuh tempo: ${new Date(loan.dueDate).toLocaleDateString('id-ID')}</div>
+                    <div class="font-bold">📖 ${loan.book ? loan.book.judul : '-'}</div>
+                    <div class="text-sm text-gray-500 mt-1">📅 Pinjam: ${new Date(loan.borrow_date).toLocaleDateString('id-ID')}</div>
+                    <div class="text-sm text-gray-500">⏰ Jatuh tempo: ${new Date(loan.due_date).toLocaleDateString('id-ID')}</div>
                     <div class="text-sm mt-2">
                         <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
                     </div>
-                    ${loan.denda > 0 ? `<div class="text-sm text-red-600 mt-1">💰 Denda: Rp ${loan.denda.toLocaleString('id-ID')}</div>` : ''}
+                    ${loan.fine > 0 ? `<div class="text-sm text-red-600 mt-1">💰 Denda: Rp ${loan.fine.toLocaleString('id-ID')}</div>` : ''}
                 </div>
             `;
         }).join('');
@@ -295,24 +235,21 @@ function closeLoansModal() {
     }
 }
 
-// Event listener untuk menangkap klik dari sidebar
+// Event listener untuk sidebar
 window.addEventListener('showMyLoans', function() {
     showMyLoans();
 });
-// ========== SAMPAI SINI ==========
 
-// Event listener search
-document.getElementById('search').addEventListener('input', renderBooks);
+// Load data awal
+loadBooks();
+loadLoans();
+loadNotifications();
 
-// Inisialisasi
-initBooks();
-books = JSON.parse(localStorage.getItem('anggota_books')) || [];
-loans = JSON.parse(localStorage.getItem('anggota_loans')) || [];
-notifications = JSON.parse(localStorage.getItem('anggota_notifications')) || [];
-
-updateNotifBadge();
-renderBooks();
-setInterval(syncFromAdmin, 5000);
+// Refresh data setiap 5 detik
+setInterval(() => {
+    loadLoans();
+    loadBooks();
+}, 5000);
 </script>
 
 @endsection

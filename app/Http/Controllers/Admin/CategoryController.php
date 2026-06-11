@@ -56,7 +56,7 @@ class CategoryController extends Controller
     {
         $category = Category::findOrFail($id);
         
-        // Cek apakah kategori masih dipakai di buku
+       
         if ($category->books()->count() > 0) {
             return response()->json(['success' => false, 'message' => 'Kategori masih digunakan di buku, tidak bisa dihapus'], 400);
         }

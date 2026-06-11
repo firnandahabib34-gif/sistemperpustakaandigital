@@ -31,10 +31,10 @@
                 <i class="fas fa-users w-5"></i> Kelola Anggota
             </a>
             
-            <a href="/admin/loans" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/loans') ? 'bg-blue-600' : '' }}">
+           <a href="{{ route('admin.loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition">
                 <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman
             </a>
-
+            
             <a href="/admin/pengembalian" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/pengembalian') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-undo-alt w-5"></i> Pengembalian
             </a>

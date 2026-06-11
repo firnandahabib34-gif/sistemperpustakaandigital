@@ -11,7 +11,7 @@ class Book extends Model
     protected $fillable = [
         'judul',
         'penulis',
-        'category_id',   // ← PASTIKAN INI ADA
+        'category_id',
         'stok',
         'penerbit',
         'tahun'
@@ -21,5 +21,42 @@ class Book extends Model
     public function category()
     {
         return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    // Relasi ke peminjaman
+    public function loans()
+    {
+        return $this->hasMany(Loan::class, 'book_id');
+    }
+
+    /**
+     * Mengurangi stok buku
+     * @param int $jumlah
+     * @return bool
+     */
+    public function kurangiStok($jumlah = 1)
+    {
+        $this->stok -= $jumlah;
+        return $this->save();
+    }
+
+    /**
+     * Menambah stok buku
+     * @param int $jumlah
+     * @return bool
+     */
+    public function tambahStok($jumlah = 1)
+    {
+        $this->stok += $jumlah;
+        return $this->save();
+    }
+
+    /**
+     * Cek ketersediaan buku
+     * @return bool
+     */
+    public function isTersedia()
+    {
+        return $this->stok > 0;
     }
 }
