@@ -1,6 +1,7 @@
-<aside class="w-64 bg-blue-700 text-white flex-shrink-0 min-h-screen flex flex-col">
-    <div class="p-5 flex-1">
-        <div class="mb-6">
+<div class="flex flex-col h-full">
+    <!-- Header dan Menu (tumbuh ke bawah) -->
+    <div class="flex-1">
+        <div class="p-5">
             <div class="flex items-center gap-2 text-xl font-bold">
                 <i class="fas fa-user-shield"></i>
                 <span>Admin Panel</span>
@@ -16,7 +17,7 @@
             </div>
         </div>
 
-        <nav class="space-y-1">
+        <nav class="space-y-1 px-5">
             <div class="text-blue-200 text-xs mb-2">MAIN MENU</div>
             
             <a href="/dashboard-admin" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-admin') ? 'bg-blue-600' : '' }}">
@@ -31,7 +32,7 @@
                 <i class="fas fa-users w-5"></i> Kelola Anggota
             </a>
             
-           <a href="{{ route('admin.loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition">
+            <a href="{{ route('admin.loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition">
                 <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman
             </a>
             
@@ -42,14 +43,10 @@
             <a href="/admin/kategori" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/kategori') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tags w-5"></i> Kelola Kategori
             </a>
-
-            <a href="/admin/laporan" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/laporan') ? 'bg-blue-600' : '' }}">
-                <i class="fas fa-chart-line w-5"></i> Laporan
-            </a>
         </nav>
     </div>
-    
-    <!-- Tombol Keluar dengan POST -->
+
+    <!-- Tombol Keluar (di bawah) -->
     <div class="p-5 border-t border-blue-500">
         <form method="POST" action="{{ route('logout') }}" class="w-full">
             @csrf
@@ -58,4 +55,4 @@
             </button>
         </form>
     </div>
-</aside>
+</div>

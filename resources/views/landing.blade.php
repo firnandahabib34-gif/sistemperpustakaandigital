@@ -63,9 +63,6 @@
             Platform manajemen perpustakaan digital modern. Kelola peminjaman, stok buku, dan anggota dengan mudah.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ route('login') }}" class="bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-indigo-700 transition inline-flex items-center justify-center gap-2">
-                <i class="fas fa-arrow-right"></i> Masuk ke Aplikasi
-            </a>
             <a href="#fitur" class="border-2 border-indigo-600 text-indigo-600 px-8 py-3 rounded-full font-semibold hover:bg-indigo-600 hover:text-white transition inline-flex items-center justify-center gap-2">
                 <i class="fas fa-info-circle"></i> Lihat Fitur
             </a>

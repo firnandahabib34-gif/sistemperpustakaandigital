@@ -69,18 +69,6 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 });
 
 // ============================================================
-// ROUTE UNTUK ADMIN (TAMPILAN - LOCALSTORAGE)
-// ============================================================
-
-Route::get('/admin/pengembalian', function () {
-    return view('admin.pengembalian.index');
-})->name('admin.pengembalian')->middleware('auth');
-
-Route::get('/admin/laporan', function () {
-    return view('admin.laporan.index');
-})->name('admin.laporan')->middleware('auth');
-
-// ============================================================
 // ROUTE UNTUK ANGGOTA (DATABASE)
 // ============================================================
 Route::get('/dashboard-anggota/buku', function () {
@@ -88,9 +76,7 @@ Route::get('/dashboard-anggota/buku', function () {
     return view('anggota.buku', compact('books'));
 })->middleware('auth');
 
-Route::get('/dashboard-anggota/loans', function () {
-    return view('anggota.loans');
-})->name('anggota.loans')->middleware('auth');
+Route::get('/dashboard-anggota/loans', [LoanController::class, 'history'])->name('anggota.loans')->middleware('auth');
 
 // ============================================================
 // ROUTE PEMINJAMAN (DATABASE)
@@ -98,13 +84,23 @@ Route::get('/dashboard-anggota/loans', function () {
 Route::middleware('auth')->group(function () {
     Route::post('/pinjam/{book_id}', [LoanController::class, 'store'])->name('pinjam.store');
     Route::get('/riwayat', [LoanController::class, 'history'])->name('riwayat');
+    Route::post('/pinjam/{id}/confirm-return', [LoanController::class, 'confirmReturn'])->name('pinjam.confirm-return');
 });
 
+// ============================================================
+// ROUTE ADMIN UNTUK PEMINJAMAN & PENGEMBALIAN
+// ============================================================
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    
+    // Peminjaman
     Route::get('/loans', [LoanController::class, 'index'])->name('loans');
     Route::patch('/loans/{id}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::patch('/loans/{id}/reject', [LoanController::class, 'reject'])->name('loans.reject');
-    Route::patch('/loans/{id}/return', [LoanController::class, 'return'])->name('loans.return');
+    Route::patch('/loans/{id}/return', [LoanController::class, 'returnLoan'])->name('loans.return');
+    
+    // Pengembalian (halaman khusus)
+    Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
+    Route::patch('/pengembalian/{id}/validate', [LoanController::class, 'returnLoan'])->name('pengembalian.validate');
 });
 
 // ============================================================
@@ -113,6 +109,12 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 Route::get('/api/categories', function () {
     return App\Models\Category::all();
 });
+
+Route::get('/api/admin/loans', function () {
+    return App\Models\Loan::with(['user', 'book'])
+                          ->orderBy('created_at', 'desc')
+                          ->get();
+})->middleware('auth');
 
 Route::get('/api/books', function () {
     return App\Models\Book::with('category')->get();
@@ -129,6 +131,27 @@ Route::get('/api/anggota/loans', function () {
                           ->get();
 })->middleware('auth');
 
+// API Notifikasi
 Route::get('/api/anggota/notifications', function () {
-    return [];
+    return App\Models\Notification::where('user_id', auth()->id())
+                                  ->orderBy('created_at', 'desc')
+                                  ->get();
+})->middleware('auth');
+
+Route::patch('/api/anggota/notifications/{id}/read', function ($id) {
+    $notif = App\Models\Notification::where('user_id', auth()->id())
+                                    ->where('id', $id)
+                                    ->first();
+    if ($notif) {
+        $notif->is_read = true;
+        $notif->save();
+    }
+    return response()->json(['success' => true]);
+})->middleware('auth');
+
+Route::patch('/api/anggota/notifications/read-all', function () {
+    App\Models\Notification::where('user_id', auth()->id())
+                           ->where('is_read', false)
+                           ->update(['is_read' => true]);
+    return response()->json(['success' => true]);
 })->middleware('auth');

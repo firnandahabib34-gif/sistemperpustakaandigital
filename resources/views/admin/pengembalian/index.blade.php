@@ -8,13 +8,12 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
     <div>
         <h1 class="text-2xl font-bold">Pengembalian Buku</h1>
-        <p class="text-gray-500 text-sm">Proses pengembalian buku yang sedang dipinjam</p>
+        <p class="text-gray-500 text-sm">Proses pengembalian buku yang sudah dikonfirmasi anggota</p>
     </div>
     <div class="flex gap-2">
-        <button onclick="filterPengembalian('semua')" class="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300">Semua</button>
-        <button onclick="filterPengembalian('dipinjam')" class="px-3 py-1 rounded text-sm bg-blue-100 text-blue-700 hover:bg-blue-200">Sedang Dipinjam</button>
-        <button onclick="filterPengembalian('terlambat')" class="px-3 py-1 rounded text-sm bg-red-100 text-red-700 hover:bg-red-200">Terlambat</button>
-        <button onclick="filterPengembalian('dikembalikan')" class="px-3 py-1 rounded text-sm bg-green-100 text-green-700 hover:bg-green-200">Sudah Kembali</button>
+        <button onclick="filterPengembalian('semua')" id="filterSemua" class="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300">Semua</button>
+        <button onclick="filterPengembalian('menunggu_validasi')" id="filterMenunggu" class="px-3 py-1 rounded text-sm bg-purple-100 text-purple-700 hover:bg-purple-200">Menunggu Validasi</button>
+        <button onclick="filterPengembalian('dikembalikan')" id="filterKembali" class="px-3 py-1 rounded text-sm bg-green-100 text-green-700 hover:bg-green-200">Sudah Kembali</button>
     </div>
 </div>
 
@@ -98,35 +97,23 @@
 </div>
 
 <script>
-// Data peminjaman
-let semuaPeminjaman = JSON.parse(localStorage.getItem('admin_loans')) || [];
+// CSRF Token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+// Data dari database
+let semuaPeminjaman = [];
 let filterSaatIni = 'semua';
 let peminjamanIdSaatIni = null;
 
-// Sinkron dari anggota ke admin
-function sinkronDariAnggota() {
-    const peminjamanAnggota = JSON.parse(localStorage.getItem('anggota_loans')) || [];
-    peminjamanAnggota.forEach(pinjam => {
-        const exists = semuaPeminjaman.find(l => l.id === pinjam.id);
-        if (!exists) {
-            semuaPeminjaman.push(pinjam);
-        }
-    });
-    localStorage.setItem('admin_loans', JSON.stringify(semuaPeminjaman));
-}
-
-function simpanPeminjaman() {
-    localStorage.setItem('admin_loans', JSON.stringify(semuaPeminjaman));
-    // Sinkron balik ke anggota
-    const peminjamanAnggota = JSON.parse(localStorage.getItem('anggota_loans')) || [];
-    semuaPeminjaman.forEach(pinjam => {
-        const anggotaPinjam = peminjamanAnggota.find(l => l.id === pinjam.id);
-        if (anggotaPinjam && anggotaPinjam.status !== pinjam.status) {
-            anggotaPinjam.status = pinjam.status;
-            anggotaPinjam.denda = pinjam.denda || 0;
-        }
-    });
-    localStorage.setItem('anggota_loans', JSON.stringify(peminjamanAnggota));
+// Load data dari database
+async function loadLoans() {
+    try {
+        const response = await fetch('/api/admin/loans');
+        semuaPeminjaman = await response.json();
+        tampilkanPengembalian();
+    } catch (error) {
+        console.error('Gagal load data:', error);
+    }
 }
 
 function hitungTerlambat(tanggalJatuhTempo) {
@@ -140,7 +127,6 @@ function hitungTerlambat(tanggalJatuhTempo) {
 }
 
 function hitungDenda(terlambat) {
-    // Denda Rp 2000 per hari
     return terlambat * 2000;
 }
 
@@ -151,61 +137,51 @@ function tampilkanPengembalian() {
     
     tbody.innerHTML = "";
 
-    let filtered = semuaPeminjaman.filter(p => p.status === 'dipinjam' || p.status === 'dikembalikan');
+    let filtered = semuaPeminjaman.filter(p => p.status === 'menunggu_validasi' || p.status === 'dikembalikan');
     
-    // Filter by status
-    if (filterSaatIni === 'dipinjam') {
-        filtered = filtered.filter(p => p.status === 'dipinjam');
-    } else if (filterSaatIni === 'terlambat') {
-        filtered = filtered.filter(p => {
-            if (p.status !== 'dipinjam') return false;
-            const terlambat = hitungTerlambat(p.dueDate);
-            return terlambat > 0;
-        });
+    if (filterSaatIni === 'menunggu_validasi') {
+        filtered = filtered.filter(p => p.status === 'menunggu_validasi');
     } else if (filterSaatIni === 'dikembalikan') {
         filtered = filtered.filter(p => p.status === 'dikembalikan');
     }
     
-    // Filter by search
     if (cari) {
         filtered = filtered.filter(p => 
-            p.nim?.toLowerCase().includes(cari) || 
-            p.userName?.toLowerCase().includes(cari) || 
-            p.title?.toLowerCase().includes(cari)
+            (p.user?.nim && p.user.nim.toLowerCase().includes(cari)) || 
+            (p.user?.name && p.user.name.toLowerCase().includes(cari)) || 
+            (p.book?.judul && p.book.judul.toLowerCase().includes(cari))
         );
     }
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="10" class="text-center text-gray-500 py-10">
-                    📭 Tidak ada data peminjaman.
-                </td>
-            </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-gray-500 py-10">📭 Tidak ada data pengembalian.</td></tr>`;
         return;
     }
 
     filtered.forEach(peminjaman => {
-        const terlambat = peminjaman.status === 'dipinjam' ? hitungTerlambat(peminjaman.dueDate) : 0;
-        const denda = peminjaman.status === 'dipinjam' ? hitungDenda(terlambat) : (peminjaman.denda || 0);
+        const user = peminjaman.user || {};
+        const book = peminjaman.book || {};
+        const terlambat = peminjaman.status === 'menunggu_validasi' ? hitungTerlambat(peminjaman.due_date) : 0;
+        const denda = peminjaman.status === 'menunggu_validasi' ? hitungDenda(terlambat) : (peminjaman.fine || 0);
         
-        // Update denda di peminjaman
-        if (peminjaman.status === 'dipinjam') {
-            peminjaman.denda = denda;
+        let statusClass = '';
+        let statusText = '';
+        if (peminjaman.status === 'menunggu_validasi') {
+            statusClass = 'bg-purple-100 text-purple-700';
+            statusText = 'Menunggu Validasi';
+        } else {
+            statusClass = 'bg-green-100 text-green-700';
+            statusText = 'Dikembalikan';
         }
-        
-        const statusClass = peminjaman.status === 'dipinjam' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700';
-        const statusText = peminjaman.status === 'dipinjam' ? 'Dipinjam' : 'Dikembalikan';
         
         tbody.innerHTML += `
             <tr class="border-b hover:bg-gray-50">
                 <td class="p-4 text-sm">${peminjaman.id}</td>
-                <td class="p-4 font-mono text-sm">${peminjaman.nim || '-'}</td>
-                <td class="p-4">${peminjaman.userName || '-'}</td>
-                <td class="p-4 font-medium">${peminjaman.title}</td>
-                <td class="p-4 text-sm">${new Date(peminjaman.borrowDate).toLocaleDateString('id-ID')}</td>
-                <td class="p-4 text-sm">${new Date(peminjaman.dueDate).toLocaleDateString('id-ID')}</td>
+                <td class="p-4 font-mono text-sm">${user.nim || '-'}</td>
+                <td class="p-4">${user.name || '-'}</td>
+                <td class="p-4 font-medium">${book.judul || '-'}</td>
+                <td class="p-4 text-sm">${new Date(peminjaman.borrow_date).toLocaleDateString('id-ID')}</td>
+                <td class="p-4 text-sm">${new Date(peminjaman.due_date).toLocaleDateString('id-ID')}</td>
                 <td class="p-4 text-sm ${terlambat > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}">
                     ${terlambat > 0 ? terlambat + ' hari' : '-'}
                 </td>
@@ -216,31 +192,33 @@ function tampilkanPengembalian() {
                     <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
                 </td>
                 <td class="p-4 text-center whitespace-nowrap">
-                    ${peminjaman.status === 'dipinjam' ? 
+                    ${peminjaman.status === 'menunggu_validasi' ? 
                         `<button onclick="bukaModalKembalikan(${peminjaman.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
-                            📖 Kembalikan
+                            ✅ Validasi Kembalikan
                         </button>` : 
                         `<span class="text-gray-400 text-xs">Sudah Kembali</span>`
                     }
                 </td>
-            </table>
+            </tr>
         `;
     });
 }
 
 function bukaModalKembalikan(id) {
-    const peminjaman = semuaPeminjaman.find(p => p.id === id);
+    const peminjaman = semuaPeminjaman.find(p => p.id == id);
     if (!peminjaman) return;
     
     peminjamanIdSaatIni = id;
-    const terlambat = hitungTerlambat(peminjaman.dueDate);
+    const user = peminjaman.user || {};
+    const book = peminjaman.book || {};
+    const terlambat = hitungTerlambat(peminjaman.due_date);
     const denda = hitungDenda(terlambat);
     
-    document.getElementById('detailNim').innerText = peminjaman.nim || '-';
-    document.getElementById('detailNama').innerText = peminjaman.userName || '-';
-    document.getElementById('detailJudul').innerText = peminjaman.title;
-    document.getElementById('detailTglPinjam').innerText = new Date(peminjaman.borrowDate).toLocaleDateString('id-ID');
-    document.getElementById('detailJatuhTempo').innerText = new Date(peminjaman.dueDate).toLocaleDateString('id-ID');
+    document.getElementById('detailNim').innerText = user.nim || '-';
+    document.getElementById('detailNama').innerText = user.name || '-';
+    document.getElementById('detailJudul').innerText = book.judul || '-';
+    document.getElementById('detailTglPinjam').innerText = new Date(peminjaman.borrow_date).toLocaleDateString('id-ID');
+    document.getElementById('detailJatuhTempo').innerText = new Date(peminjaman.due_date).toLocaleDateString('id-ID');
     document.getElementById('detailTerlambat').innerHTML = terlambat > 0 ? `<span class="text-red-600 font-semibold">${terlambat} hari</span>` : 'Tidak terlambat';
     document.getElementById('detailDenda').innerHTML = denda > 0 ? `<span class="text-red-600 font-semibold">Rp ${denda.toLocaleString('id-ID')}</span>` : 'Tidak ada denda';
     
@@ -248,70 +226,49 @@ function bukaModalKembalikan(id) {
     document.body.style.overflow = 'hidden';
 }
 
-function prosesKembalikan() {
-    const peminjaman = semuaPeminjaman.find(p => p.id === peminjamanIdSaatIni);
-    if (!peminjaman) return;
+async function prosesKembalikan() {
+    const id = peminjamanIdSaatIni;
     
-    const terlambat = hitungTerlambat(peminjaman.dueDate);
-    const denda = hitungDenda(terlambat);
-    
-    let pesan = `📖 Konfirmasi pengembalian buku "${peminjaman.title}"`;
-    if (denda > 0) {
-        pesan += ` dengan denda Rp ${denda.toLocaleString('id-ID')}`;
-    }
-    pesan += `?`;
-    
-    if (confirm(pesan)) {
-        // Update status peminjaman
-        peminjaman.status = 'dikembalikan';
-        peminjaman.denda = denda;
-        peminjaman.tanggalKembali = new Date().toISOString();
-        
-        // Kembalikan stok buku
-        const bukuAnggota = JSON.parse(localStorage.getItem('anggota_books')) || [];
-        const buku = bukuAnggota.find(b => b.id === peminjaman.bookId);
-        if (buku) {
-            buku.stock++;
-            localStorage.setItem('anggota_books', JSON.stringify(bukuAnggota));
+    if (confirm('Yakin anggota sudah mengembalikan buku secara fisik?')) {
+        try {
+            const response = await fetch(`/admin/pengembalian/${id}/validate`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
             
-            // Sinkron ke admin books
-            const bukuAdmin = JSON.parse(localStorage.getItem('admin_books')) || [];
-            const bukuAdminTarget = bukuAdmin.find(b => b.id === peminjaman.bookId);
-            if (bukuAdminTarget) {
-                bukuAdminTarget.stock = buku.stock;
-                localStorage.setItem('admin_books', JSON.stringify(bukuAdmin));
+            const result = await response.json();
+            
+            if (response.ok) {
+                alert('✅ ' + result.message);
+                tutupModal();
+                loadLoans(); // Refresh data
+            } else {
+                alert('❌ ' + (result.message || 'Gagal memproses pengembalian'));
             }
-        }
-        
-        simpanPeminjaman();
-        
-        // Tambah notifikasi ke anggota
-        const pesanNotif = denda > 0 
-            ? `📚 Buku "${peminjaman.title}" telah dikembalikan. Denda: Rp ${denda.toLocaleString('id-ID')}. Terima kasih!`
-            : `📚 Buku "${peminjaman.title}" telah dikembalikan. Terima kasih!`;
-        
-        const notifAnggota = JSON.parse(localStorage.getItem('anggota_notifications')) || [];
-        notifAnggota.unshift({
-            id: Date.now(),
-            message: pesanNotif,
-            created_at: new Date().toLocaleString()
-        });
-        if (notifAnggota.length > 10) notifAnggota.pop();
-        localStorage.setItem('anggota_notifications', JSON.stringify(notifAnggota));
-        
-        tutupModal();
-        tampilkanPengembalian();
-        
-        if (denda > 0) {
-            alert(`✅ Buku berhasil dikembalikan!\nDenda: Rp ${denda.toLocaleString('id-ID')}`);
-        } else {
-            alert('✅ Buku berhasil dikembalikan!');
+        } catch (error) {
+            alert('❌ Terjadi kesalahan: ' + error.message);
         }
     }
 }
 
 function filterPengembalian(status) {
     filterSaatIni = status;
+    
+    const filters = ['semua', 'menunggu_validasi', 'dikembalikan'];
+    filters.forEach(f => {
+        const btn = document.getElementById(`filter${f.charAt(0).toUpperCase() + f.slice(1)}`);
+        if (btn) {
+            if (f === status) {
+                btn.className = 'px-3 py-1 rounded text-sm bg-indigo-600 text-white';
+            } else {
+                btn.className = 'px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300';
+            }
+        }
+    });
+    
     tampilkanPengembalian();
 }
 
@@ -323,9 +280,8 @@ function tutupModal() {
 // Event pencarian
 document.getElementById('cari').addEventListener('input', tampilkanPengembalian);
 
-// Sinkron data dari anggota
-sinkronDariAnggota();
-tampilkanPengembalian();
+// Load data awal
+loadLoans();
 </script>
 
 @endsection

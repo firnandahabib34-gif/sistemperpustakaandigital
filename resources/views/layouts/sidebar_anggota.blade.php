@@ -1,21 +1,23 @@
-<aside class="w-64 bg-blue-700 text-white flex-shrink-0 min-h-screen flex flex-col">
-    <div class="p-5 flex-1">
-        <div class="mb-6">
-            <div class="flex items-center gap-2 text-xl font-bold">
-                <i class="fas fa-user-graduate"></i>
-                <span>Anggota Panel</span>
+<div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="p-5">
+        <div class="flex items-center gap-2 text-xl font-bold">
+            <i class="fas fa-user-graduate"></i>
+            <span>Anggota Panel</span>
+        </div>
+        <div class="flex items-center gap-3 mt-4 pt-4 border-t border-blue-500">
+            <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                <i class="fas fa-user"></i>
             </div>
-            <div class="flex items-center gap-3 mt-4 pt-4 border-t border-blue-500">
-                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div>
-                    <div class="text-sm font-semibold" id="userName">Mahasiswa</div>
-                    <div class="text-xs text-blue-200">Anggota Aktif</div>
-                </div>
+            <div>
+                <div class="text-sm font-semibold" id="userName">Anggota</div>
+                <div class="text-xs text-blue-200">Anggota Aktif</div>
             </div>
         </div>
+    </div>
 
+    <!-- Menu -->
+    <div class="flex-1 px-5">
         <nav class="space-y-1">
             <div class="text-blue-200 text-xs mb-2">MENU UTAMA</div>
             
@@ -28,21 +30,21 @@
             </a>
             
             <a href="/dashboard-anggota/loans" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota/loans') ? 'bg-blue-600' : '' }}">
-                <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman
+                <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman Saya
             </a>
         </nav>
     </div>
-    
-    <!-- Tombol Keluar dengan POST -->
+
+    <!-- Tombol Keluar -->
     <div class="p-5 border-t border-blue-500">
-        <form method="POST" action="{{ route('logout') }}" class="w-full">
+        <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" class="flex items-center justify-center gap-2 px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition w-full">
+            <button type="submit" class="flex items-center justify-center gap-2 w-full px-3 py-2 rounded bg-red-500 hover:bg-red-600 transition">
                 <i class="fas fa-sign-out-alt"></i> Keluar
             </button>
         </form>
     </div>
-</aside>
+</div>
 
 <script>
 // Ambil nama user dari localStorage
