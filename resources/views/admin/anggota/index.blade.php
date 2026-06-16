@@ -72,10 +72,13 @@
                     <select id="prodi" class="w-full p-2 border rounded-lg">
                         <option value="">Pilih Program Studi</option>
                         <option value="Teknik Informatika">Teknik Informatika</option>
-                        <option value="Sistem Informasi">Sistem Informasi</option>
+                        <option value="Teknologi Geomatika">Teknologi Geomatika</option>
+                        <option value="Terapan Animasi">Terapan Animasi</option>
+                        <option value="Teknologi Rekayasa Multimedia">Teknologi Rekayasa Multimedia</option>
                         <option value="Teknik Komputer">Teknik Komputer</option>
-                        <option value="Manajemen Informatika">Manajemen Informatika</option>
-                        <option value="Akuntansi">Akuntansi</option>
+                        <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
+                        <option value="Rekayasa Keamanan Siber">Rekayasa Keamanan Siber</option>
+                        <option value="Teknologi Permainan">Teknologi Permainan</option>
                     </select>
                 </div>
 
