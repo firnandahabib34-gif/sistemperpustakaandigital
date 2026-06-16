@@ -220,7 +220,7 @@
         <i class="fas fa-landmark text-indigo-400 text-xl"></i>
         <span class="text-white font-bold">E-Library</span>
     </div>
-    <p class="text-sm">Sistem Perpustakaan Digital Terintegrasi | Copyright © 2026 Tim PBL IF-2MA-02</p>
+    <p class="text-sm">Sistem Perpustakaan Digital | Copyright © 2026 Tim PBL IF-2MA-02</p>
     <p class="text-xs text-gray-500 mt-1">Politeknik Negeri Batam</p>
 </footer>
 

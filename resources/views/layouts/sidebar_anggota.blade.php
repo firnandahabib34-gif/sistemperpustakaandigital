@@ -10,8 +10,9 @@
                 <i class="fas fa-user"></i>
             </div>
             <div>
-                <div class="text-sm font-semibold" id="userName">Anggota</div>
-                <div class="text-xs text-blue-200">Anggota Aktif</div>
+                <div class="text-sm font-semibold">{{ Auth::user()->name }}</div>
+                <div class="text-xs text-blue-200">Anggota</div>
+                <div class="text-xs text-blue-300 mt-0.5">NIM: {{ Auth::user()->nim }}</div>
             </div>
         </div>
     </div>
@@ -45,12 +46,3 @@
         </form>
     </div>
 </div>
-
-<script>
-// Ambil nama user dari localStorage
-const loggedIn = JSON.parse(localStorage.getItem('logged_in'));
-if (loggedIn && loggedIn.name) {
-    const userNameSpan = document.getElementById('userName');
-    if (userNameSpan) userNameSpan.innerText = loggedIn.name;
-}
-</script>

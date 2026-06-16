@@ -11,8 +11,8 @@
                     <i class="fas fa-user-cog"></i>
                 </div>
                 <div>
-                    <div class="text-sm font-semibold">Administrator</div>
-                    <div class="text-xs text-blue-200">Admin</div>
+                    <div class="text-sm font-semibold">{{ Auth::user()->name }}</div>
+                    <div class="text-xs text-blue-200">Administrator</div>  
                 </div>
             </div>
         </div>
