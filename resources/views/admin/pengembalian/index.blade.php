@@ -31,7 +31,7 @@
                     <th class="text-left p-4 font-semibold text-gray-600">NIM</th>
                     <th class="text-left p-4 font-semibold text-gray-600">Nama Anggota</th>
                     <th class="text-left p-4 font-semibold text-gray-600">Judul Buku</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Tgl Pinjam</th>
+                    <th class="text-left p-4 font-semibold text-gray-600">Tanggal Pinjam</th>
                     <th class="text-left p-4 font-semibold text-gray-600">Jatuh Tempo</th>
                     <th class="text-left p-4 font-semibold text-gray-600">Terlambat</th>
                     <th class="text-left p-4 font-semibold text-gray-600">Denda</th>
@@ -158,50 +158,60 @@ function tampilkanPengembalian() {
         return;
     }
 
-    filtered.forEach(peminjaman => {
-        const user = peminjaman.user || {};
-        const book = peminjaman.book || {};
-        const terlambat = peminjaman.status === 'menunggu_validasi' ? hitungTerlambat(peminjaman.due_date) : 0;
-        const denda = peminjaman.status === 'menunggu_validasi' ? hitungDenda(terlambat) : (peminjaman.fine || 0);
-        
-        let statusClass = '';
-        let statusText = '';
-        if (peminjaman.status === 'menunggu_validasi') {
-            statusClass = 'bg-purple-100 text-purple-700';
-            statusText = 'Menunggu Validasi';
-        } else {
-            statusClass = 'bg-green-100 text-green-700';
-            statusText = 'Dikembalikan';
-        }
-        
-        tbody.innerHTML += `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="p-4 text-sm">${peminjaman.id}</td>
-                <td class="p-4 font-mono text-sm">${user.nim || '-'}</td>
-                <td class="p-4">${user.name || '-'}</td>
-                <td class="p-4 font-medium">${book.judul || '-'}</td>
-                <td class="p-4 text-sm">${new Date(peminjaman.borrow_date).toLocaleDateString('id-ID')}</td>
-                <td class="p-4 text-sm">${new Date(peminjaman.due_date).toLocaleDateString('id-ID')}</td>
-                <td class="p-4 text-sm ${terlambat > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}">
-                    ${terlambat > 0 ? terlambat + ' hari' : '-'}
-                </td>
-                <td class="p-4 text-sm font-semibold ${denda > 0 ? 'text-red-600' : 'text-gray-500'}">
-                    ${denda > 0 ? 'Rp ' + denda.toLocaleString('id-ID') : '-'}
-                </td>
-                <td class="p-4">
-                    <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
-                </td>
-                <td class="p-4 text-center whitespace-nowrap">
-                    ${peminjaman.status === 'menunggu_validasi' ? 
-                        `<button onclick="bukaModalKembalikan(${peminjaman.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
-                            ✅ Validasi Kembalikan
-                        </button>` : 
-                        `<span class="text-gray-400 text-xs">Sudah Kembali</span>`
-                    }
-                </td>
-            </tr>
-        `;
-    });
+filtered.forEach(peminjaman => {
+    const user = peminjaman.user || {};
+    const book = peminjaman.book || {};
+    
+    // 🔥 PERBAIKAN DI SINI
+    let terlambat, denda;
+    if (peminjaman.status === 'dikembalikan') {
+        // Ambil dari database jika sudah dikembalikan
+        denda = peminjaman.fine || 0;
+        terlambat = denda > 0 ? Math.ceil(denda / 2000) : 0;
+    } else {
+        // Hitung otomatis jika masih menunggu validasi
+        terlambat = hitungTerlambat(peminjaman.due_date);
+        denda = hitungDenda(terlambat);
+    }
+    
+    let statusClass = '';
+    let statusText = '';
+    if (peminjaman.status === 'menunggu_validasi') {
+        statusClass = 'bg-purple-100 text-purple-700';
+        statusText = 'Menunggu Validasi';
+    } else {
+        statusClass = 'bg-green-100 text-green-700';
+        statusText = 'Dikembalikan';
+    }
+    
+    tbody.innerHTML += `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="p-4 text-sm">${peminjaman.id}</td>
+            <td class="p-4 font-mono text-sm">${user.nim || '-'}</td>
+            <td class="p-4">${user.name || '-'}</td>
+            <td class="p-4 font-medium">${book.judul || '-'}</td>
+            <td class="p-4 text-sm">${new Date(peminjaman.borrow_date).toLocaleDateString('id-ID')}</td>
+            <td class="p-4 text-sm">${new Date(peminjaman.due_date).toLocaleDateString('id-ID')}</td>
+            <td class="p-4 text-sm ${terlambat > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}">
+                ${terlambat > 0 ? terlambat + ' hari' : '-'}
+            </td>
+            <td class="p-4 text-sm font-semibold ${denda > 0 ? 'text-red-600' : 'text-gray-500'}">
+                ${denda > 0 ? 'Rp ' + denda.toLocaleString('id-ID') : '-'}
+            </td>
+            <td class="p-4">
+                <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
+            </td>
+            <td class="p-4 text-center whitespace-nowrap">
+                ${peminjaman.status === 'menunggu_validasi' ? 
+                    `<button onclick="bukaModalKembalikan(${peminjaman.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
+                        ✅ Validasi Kembalikan
+                    </button>` : 
+                    `<span class="text-gray-400 text-xs">Sudah Kembali</span>`
+                }
+            </td>
+        </tr>
+    `;
+});
 }
 
 function bukaModalKembalikan(id) {

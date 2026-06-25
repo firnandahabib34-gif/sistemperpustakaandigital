@@ -17,6 +17,9 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
-        "flowbite": "^4.0.1"
+        "build": "^0.1.4",
+        "flowbite": "^4.0.1",
+        "npm": "^11.17.0",
+        "run": "^1.5.0"
     }
 }

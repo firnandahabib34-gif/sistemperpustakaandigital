@@ -31,7 +31,7 @@
         </div>
         
         <div class="p-6">
-            <form id="bookForm">
+            <form id="bookForm" enctype="multipart/form-data">
                 <input type="hidden" id="bookId" name="book_id">
                 
                 <div class="mb-3">
@@ -50,7 +50,6 @@
                     <label class="block text-sm font-medium mb-1">Kategori</label>
                     <select id="category_id" class="w-full p-2 border rounded-lg">
                         <option value="">Pilih Kategori</option>
-                        <!-- Data kategori akan diisi JavaScript -->
                     </select>
                 </div>
 
@@ -66,10 +65,43 @@
                         class="w-full p-2 border rounded-lg">
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="block text-sm font-medium mb-1">Tahun Terbit</label>
                     <input id="tahun" type="text" placeholder="Contoh: 2024" 
                         class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">ISBN</label>
+                    <input id="isbn" type="text" placeholder="Contoh: 978-602-04-1234-5" 
+                        class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Lokasi Rak</label>
+                    <input id="lokasi_rak" type="text" placeholder="Contoh: A2-03" 
+                        class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Deskripsi / Sinopsis</label>
+                    <textarea id="deskripsi" rows="3" placeholder="Sinopsis buku..." 
+                        class="w-full p-2 border rounded-lg"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Jumlah Halaman</label>
+                    <input id="jumlah_halaman" type="number" placeholder="Contoh: 250" 
+                        class="w-full p-2 border rounded-lg">
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Sampul Buku</label>
+                    <input id="sampul" type="file" accept="image/*" 
+                        class="w-full p-2 border rounded-lg">
+                    <div id="preview_sampul" class="mt-2 hidden">
+                        <img id="preview_img" src="" class="w-24 h-32 object-cover rounded border">
+                    </div>
                 </div>
 
                 <div class="flex gap-2">
@@ -86,14 +118,16 @@
 </div>
 
 <script>
-// Data buku dari database (dikirim dari controller)
+// Data buku dari database
 let books = @json($books);
 let editId = null;
 
-// CSRF Token untuk Laravel
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
-                  document.head.querySelector('meta[name="csrf-token"]')?.content;
+// CSRF Token
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
+// ============================================================
+// RENDER BUKU
+// ============================================================
 function renderBooks() {
     const searchValue = document.getElementById('search').value.toLowerCase();
     const grid = document.getElementById('booksGrid');
@@ -112,19 +146,23 @@ function renderBooks() {
     }
 
     filteredBooks.forEach(book => {
-        // Ambil nama kategori dari relasi category (jika ada)
         const kategoriNama = book.category ? book.category.nama : '-';
         
-        grid.innerHTML += `
-            <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
+            grid.innerHTML += `
+        <div class="bg-white p-2 rounded-xl shadow hover:shadow-lg transition flex gap-2">
+            <!-- Info Buku (di kiri) -->
+            <div class="flex-1">
                 <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
                 <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
                 <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
                 <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
                 <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-barcode"></i> ISBN: ${book.isbn || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-pin"></i> Rak: ${book.lokasi_rak || '-'}</p>
+                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-file-alt"></i> Halaman: ${book.jumlah_halaman || '-'}</p>
                 <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
 
-                <div class="mt-4 flex gap-2">
+                <div class="mt-3 flex gap-2">
                     <button onclick="editBook(${book.id})" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1 rounded text-sm transition cursor-pointer">
                         ✏️ Edit
                     </button>
@@ -133,7 +171,16 @@ function renderBooks() {
                     </button>
                 </div>
             </div>
-        `;
+
+            <!-- Sampul (di kanan) -->
+            <div class="flex-shrink-0">
+                ${book.sampul ? 
+                    `<img src="/${book.sampul}" class="w-40 h-60 object-cover rounded-lg border">` : 
+                    `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
+                }
+            </div>
+        </div>
+    `;
     });
 }
 
@@ -147,6 +194,9 @@ function escapeHtml(str) {
     });
 }
 
+// ============================================================
+// MODAL
+// ============================================================
 function openModal() {
     editId = null;
     document.getElementById('bookId').value = '';
@@ -156,6 +206,12 @@ function openModal() {
     document.getElementById('stok').value = '';
     document.getElementById('penerbit').value = '';
     document.getElementById('tahun').value = '';
+    document.getElementById('isbn').value = '';
+    document.getElementById('lokasi_rak').value = '';
+    document.getElementById('deskripsi').value = '';
+    document.getElementById('jumlah_halaman').value = '';
+    document.getElementById('sampul').value = '';
+    document.getElementById('preview_sampul').classList.add('hidden');
     document.getElementById('modalTitle').innerText = 'Tambah Buku';
     document.getElementById('modal').classList.remove('hidden');
     document.body.style.overflow = 'hidden';
@@ -166,7 +222,9 @@ function closeModal() {
     document.body.style.overflow = 'auto';
 }
 
-// Load kategori untuk select option
+// ============================================================
+// LOAD KATEGORI
+// ============================================================
 async function loadCategories() {
     try {
         const response = await fetch('/api/categories');
@@ -185,7 +243,26 @@ async function loadCategories() {
     }
 }
 
-// Submit form (Tambah/Edit)
+// ============================================================
+// PREVIEW SAMPUL
+// ============================================================
+document.getElementById('sampul')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview_img').src = e.target.result;
+            document.getElementById('preview_sampul').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('preview_sampul').classList.add('hidden');
+    }
+});
+
+// ============================================================
+// SUBMIT FORM
+// ============================================================
 document.getElementById('bookForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -195,34 +272,49 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
     const stok = parseInt(document.getElementById('stok').value);
     const penerbit = document.getElementById('penerbit').value.trim();
     const tahun = document.getElementById('tahun').value.trim();
+    const isbn = document.getElementById('isbn').value.trim();
+    const lokasi_rak = document.getElementById('lokasi_rak').value.trim();
+    const deskripsi = document.getElementById('deskripsi').value.trim();
+    const jumlah_halaman = document.getElementById('jumlah_halaman').value.trim();
+    const sampul = document.getElementById('sampul').files[0];
 
     if (!judul || !penulis || isNaN(stok)) {
         alert('Harap isi Judul, Penulis, dan Stok dengan benar!');
         return;
     }
 
-    let url, method, body;
+    const formData = new FormData();
+    formData.append('judul', judul);
+    formData.append('penulis', penulis);
+    formData.append('category_id', category_id);
+    formData.append('stok', stok);
+    formData.append('penerbit', penerbit);
+    formData.append('tahun', tahun);
+    formData.append('isbn', isbn);
+    formData.append('lokasi_rak', lokasi_rak);
+    formData.append('deskripsi', deskripsi);
+    formData.append('jumlah_halaman', jumlah_halaman);
+    if (sampul) {
+        formData.append('sampul', sampul);
+    }
 
+    let url, method;
     if (editId) {
-        // UPDATE
         url = `/admin/books/${editId}`;
-        method = 'PUT';
-        body = { judul, penulis, category_id, stok, penerbit, tahun, _method: 'PUT' };
+        method = 'POST';
+        formData.append('_method', 'PUT');
     } else {
-        // CREATE
         url = '/admin/books';
         method = 'POST';
-        body = { judul, penulis, category_id, stok, penerbit, tahun };
     }
 
     try {
         const response = await fetch(url, {
             method: method,
             headers: {
-                'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken
             },
-            body: JSON.stringify(body)
+            body: formData
         });
 
         const result = await response.json();
@@ -239,6 +331,9 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
     }
 });
 
+// ============================================================
+// EDIT BUKU
+// ============================================================
 async function editBook(id) {
     try {
         const response = await fetch(`/admin/books/${id}/edit`);
@@ -251,6 +346,17 @@ async function editBook(id) {
         document.getElementById('stok').value = book.stok;
         document.getElementById('penerbit').value = book.penerbit || '';
         document.getElementById('tahun').value = book.tahun || '';
+        document.getElementById('isbn').value = book.isbn || '';
+        document.getElementById('lokasi_rak').value = book.lokasi_rak || '';
+        document.getElementById('deskripsi').value = book.deskripsi || '';
+        document.getElementById('jumlah_halaman').value = book.jumlah_halaman || '';
+        
+        if (book.sampul) {
+            document.getElementById('preview_img').src = '/' + book.sampul;
+            document.getElementById('preview_sampul').classList.remove('hidden');
+        } else {
+            document.getElementById('preview_sampul').classList.add('hidden');
+        }
 
         editId = id;
         document.getElementById('modalTitle').innerText = 'Edit Buku';
@@ -261,6 +367,9 @@ async function editBook(id) {
     }
 }
 
+// ============================================================
+// DELETE BUKU
+// ============================================================
 async function deleteBook(id) {
     const book = books.find(b => b.id === id);
     if (confirm(`Yakin ingin menghapus buku "${book?.judul}"?`)) {
@@ -285,10 +394,11 @@ async function deleteBook(id) {
     }
 }
 
-// Event listener search
+// ============================================================
+// EVENT LISTENER & INITIAL LOAD
+// ============================================================
 document.getElementById('search').addEventListener('input', renderBooks);
 
-// Load kategori dan render awal
 loadCategories();
 renderBooks();
 </script>

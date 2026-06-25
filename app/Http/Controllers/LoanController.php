@@ -38,7 +38,8 @@ class LoanController extends Controller
             'borrow_date' => now(),
             'due_date' => now()->addDays(7),
             'status' => 'menunggu',
-            'anggota_confirmed' => 0
+            'anggota_confirmed' => 0,
+            'fine' => 0
         ]);
 
         return response()->json(['success' => true, 'message' => 'Peminjaman berhasil diajukan']);
@@ -61,7 +62,7 @@ class LoanController extends Controller
         return view('admin.pengembalian.index', compact('loans'));
     }
 
-    // Admin menyetujui
+    // Admin menyetujui peminjaman
     public function approve($id)
     {
         $loan = Loan::findOrFail($id);
@@ -79,7 +80,7 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Peminjaman disetujui');
     }
 
-    // Admin menolak (kembalikan stok)
+    // Admin menolak peminjaman (kembalikan stok)
     public function reject($id)
     {
         $loan = Loan::findOrFail($id);
@@ -122,61 +123,67 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Konfirmasi berhasil. Menunggu validasi admin.');
     }
 
-    // Admin validasi pengembalian (hanya bisa jika anggota sudah konfirmasi)
+    // 🔥 HITUNG DENDA
+private function calculateFine($loan)
+{
+    $today = now();
+    $dueDate = $loan->due_date;
+
+    if ($today > $dueDate) {
+        // 🔥 PAKAI (int) AGAR HASILNYA INTEGER
+        $daysLate = (int) $dueDate->diffInDays($today);
+        return $daysLate * 2000;
+    }
+
+    return 0;
+}
+
+    // Admin validasi pengembalian (hanya bisa jika status menunggu_validasi)
     public function returnLoan($id)
     {
-        $loan = Loan::findOrFail($id);
-        
-        if (!$loan->anggota_confirmed) {
-            return redirect()->back()->with('error', 'Anggota belum mengkonfirmasi pengembalian buku');
+        try {
+            $loan = Loan::with('book')->findOrFail($id);
+            
+            if ($loan->status !== 'menunggu_validasi') {
+                return response()->json(['message' => 'Status tidak valid untuk pengembalian'], 400);
+            }
+            
+            // 🔥 HITUNG DENDA
+            $fine = $this->calculateFine($loan);
+            
+            // 🔥 SIMPAN DENDA KE DATABASE (POSITIF)
+            $loan->fine = $fine;
+            
+            $loan->status = 'dikembalikan';
+            $loan->return_date = now();
+            $loan->admin_id = Auth::id();
+            $loan->save();
+            
+            // Kembalikan stok
+            $book = Book::find($loan->book_id);
+            if ($book) {
+                $book->stok += 1;
+                $book->save();
+            }
+            
+            // Kirim notifikasi ke anggota
+            $message = $fine > 0 
+                ? "Buku '{$loan->book->judul}' telah dikembalikan dengan denda Rp " . number_format($fine, 0, ',', '.')
+                : "Buku '{$loan->book->judul}' telah dikembalikan. Terima kasih!";
+            
+            Notification::send($loan->user_id, '📚 Pengembalian Buku', $message);
+            
+            return response()->json([
+                'success' => true,
+                'message' => $fine > 0 ? "Buku dikembalikan dengan denda Rp " . number_format($fine, 0, ',', '.') : 'Buku berhasil dikembalikan'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
-        
-        if ($loan->status !== 'menunggu_validasi') {
-            return redirect()->back()->with('error', 'Status tidak valid untuk pengembalian');
-        }
-        
-        $fine = $this->calculateFine($loan);
-        
-        $loan->status = 'dikembalikan';
-        $loan->return_date = now();
-        $loan->fine = $fine;
-        $loan->admin_id = Auth::id();
-        $loan->save();
-        
-        $book = Book::find($loan->book_id);
-        if ($book) {
-            $book->stok += 1;
-            $book->save();
-        }
-        
-        $message = $fine > 0 
-            ? "Buku '{$loan->book->judul}' telah dikembalikan dengan denda Rp " . number_format($fine, 0, ',', '.')
-            : "Buku '{$loan->book->judul}' telah dikembalikan. Terima kasih!";
-        
-        Notification::send($loan->user_id, '📚 Pengembalian Buku', $message);
-        
-        $successMessage = $fine > 0 
-            ? "Buku dikembalikan dengan denda Rp " . number_format($fine, 0, ',', '.')
-            : "Buku berhasil dikembalikan";
-        
-        return redirect()->route('admin.pengembalian')->with('success', $successMessage);
     }
 
-    // Hitung denda
-    private function calculateFine($loan)
-    {
-        $today = now();
-        $dueDate = $loan->due_date;
-
-        if ($today > $dueDate) {
-            $daysLate = $today->diffInDays($dueDate);
-            return $daysLate * 2000;
-        }
-
-        return 0;
-    }
-
-    // Anggota lihat riwayat
+    // Anggota lihat riwayat peminjaman
     public function history()
     {
         $loans = Loan::where('user_id', Auth::id())
