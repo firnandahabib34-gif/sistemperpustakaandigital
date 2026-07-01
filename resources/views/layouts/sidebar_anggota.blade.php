@@ -22,15 +22,18 @@
         <nav class="space-y-1">
             <div class="text-blue-200 text-xs mb-2">MENU UTAMA</div>
             
-            <a href="/dashboard-anggota" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota') ? 'bg-blue-600' : '' }}">
+            <!-- Dashboard -->
+            <a href="{{ url('/dashboard-anggota') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tachometer-alt w-5"></i> Dashboard
             </a>
             
-            <a href="/dashboard-anggota/buku" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota/buku') ? 'bg-blue-600' : '' }}">
+            <!-- Koleksi Buku -->
+            <a href="{{ url('/dashboard-anggota/buku') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota/buku') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-book w-5"></i> Koleksi Buku
             </a>
             
-            <a href="/dashboard-anggota/loans" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota/loans') ? 'bg-blue-600' : '' }}">
+            <!-- Peminjaman Saya -->
+            <a href="{{ url('/dashboard-anggota/loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-anggota/loans') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman Saya
             </a>
         </nav>

@@ -129,19 +129,21 @@
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
 async function loadDashboard() {
-    try {
-        // Data buku & anggota
-        const booksRes = await fetch('/api/books');
-        const books = await booksRes.json();
-        document.getElementById('totalBooks').innerText = books.length;
-        
-        const anggotaRes = await fetch('/api/anggota');
-        const anggota = await anggotaRes.json();
-        document.getElementById('totalAnggota').innerText = anggota.length;
-        
-        // Data peminjaman
-        const loansRes = await fetch('/api/admin/loans');
-        const loans = await loansRes.json();
+try {
+    // Data buku & anggota
+    const booksRes = await fetch("{{ url('/api/books') }}");
+    const books = await booksRes.json();
+    document.getElementById('totalBooks').innerText = books.length;
+
+    const anggotaRes = await fetch("{{ url('/api/anggota') }}");
+    const anggota = await anggotaRes.json();
+    document.getElementById('totalAnggota').innerText = anggota.length;
+
+    // Data peminjaman
+    const loansRes = await fetch("{{ url('/api/admin/loans') }}");
+    const loans = await loansRes.json();
+    
+    // ... sisa kode filter di bawahnya sudah betul ...
         
         const activeLoans = loans.filter(l => l.status === 'dipinjam').length;
         const pendingLoans = loans.filter(l => l.status === 'menunggu').length;

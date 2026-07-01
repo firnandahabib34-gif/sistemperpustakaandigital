@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Book;
 use App\Models\Loan;
 use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,7 +40,8 @@ class LoanController extends Controller
             'due_date' => now()->addDays(7),
             'status' => 'menunggu',
             'anggota_confirmed' => 0,
-            'fine' => 0
+            'fine' => 0,
+            'extended_count' => 0
         ]);
 
         return response()->json(['success' => true, 'message' => 'Peminjaman berhasil diajukan']);
@@ -123,22 +125,21 @@ class LoanController extends Controller
         return redirect()->back()->with('success', 'Konfirmasi berhasil. Menunggu validasi admin.');
     }
 
-    // 🔥 HITUNG DENDA
-private function calculateFine($loan)
-{
-    $today = now();
-    $dueDate = $loan->due_date;
+    // Hitung denda
+    private function calculateFine($loan)
+    {
+        $today = now();
+        $dueDate = $loan->due_date;
 
-    if ($today > $dueDate) {
-        // 🔥 PAKAI (int) AGAR HASILNYA INTEGER
-        $daysLate = (int) $dueDate->diffInDays($today);
-        return $daysLate * 2000;
+        if ($today > $dueDate) {
+            $daysLate = (int) $dueDate->diffInDays($today);
+            return $daysLate * 2000;
+        }
+
+        return 0;
     }
 
-    return 0;
-}
-
-    // Admin validasi pengembalian (hanya bisa jika status menunggu_validasi)
+    // Admin validasi pengembalian
     public function returnLoan($id)
     {
         try {
@@ -148,25 +149,19 @@ private function calculateFine($loan)
                 return response()->json(['message' => 'Status tidak valid untuk pengembalian'], 400);
             }
             
-            // 🔥 HITUNG DENDA
             $fine = $this->calculateFine($loan);
-            
-            // 🔥 SIMPAN DENDA KE DATABASE (POSITIF)
             $loan->fine = $fine;
-            
             $loan->status = 'dikembalikan';
             $loan->return_date = now();
             $loan->admin_id = Auth::id();
             $loan->save();
             
-            // Kembalikan stok
             $book = Book::find($loan->book_id);
             if ($book) {
                 $book->stok += 1;
                 $book->save();
             }
             
-            // Kirim notifikasi ke anggota
             $message = $fine > 0 
                 ? "Buku '{$loan->book->judul}' telah dikembalikan dengan denda Rp " . number_format($fine, 0, ',', '.')
                 : "Buku '{$loan->book->judul}' telah dikembalikan. Terima kasih!";
@@ -191,5 +186,96 @@ private function calculateFine($loan)
                      ->orderBy('created_at', 'desc')
                      ->get();
         return view('anggota.loans', compact('loans'));
+    }
+
+    // ============================================================
+    // PERPANJANGAN DENGAN KONFIRMASI ADMIN
+    // ============================================================
+
+    // Anggota mengajukan perpanjangan
+    public function extend($id)
+    {
+        $loan = Loan::where('user_id', auth()->id())
+                    ->where('id', $id)
+                    ->where('status', 'dipinjam')
+                    ->first();
+
+        if (!$loan) {
+            return redirect()->back()->with('error', 'Peminjaman tidak ditemukan atau tidak bisa diperpanjang');
+        }
+
+        if ($loan->extended_count >= 1) {
+            return redirect()->back()->with('error', 'Maksimal perpanjangan hanya 1 kali');
+        }
+
+        if (now() > $loan->due_date) {
+            return redirect()->back()->with('error', 'Buku sudah melewati jatuh tempo');
+        }
+
+        // Cek apakah sudah ada pengajuan perpanjangan yang menunggu
+        if ($loan->extend_status === 'menunggu') {
+            return redirect()->back()->with('error', 'Pengajuan perpanjangan sudah diajukan, menunggu admin');
+        }
+
+        $loan->extend_status = 'menunggu';
+        $loan->extend_requested_at = now();
+        $loan->save();
+
+        // Notifikasi ke admin (user dengan role admin)
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            Notification::send(
+                $admin->id,
+                '📅 Pengajuan Perpanjangan',
+                "Anggota {$loan->user->name} mengajukan perpanjangan buku '{$loan->book->judul}'"
+            );
+        }
+
+        return redirect()->back()->with('success', 'Pengajuan perpanjangan berhasil dikirim, menunggu admin');
+    }
+
+    // Admin menyetujui perpanjangan
+    public function approveExtend($id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if ($loan->extend_status !== 'menunggu') {
+            return redirect()->back()->with('error', 'Tidak ada pengajuan perpanjangan');
+        }
+
+        // Perpanjang 7 hari
+        $loan->due_date = $loan->due_date->addDays(7);
+        $loan->extended_count += 1;
+        $loan->extend_status = 'disetujui';
+        $loan->save();
+
+        Notification::send(
+            $loan->user_id,
+            '✅ Perpanjangan Disetujui',
+            "Perpanjangan buku '{$loan->book->judul}' disetujui. Jatuh tempo baru: " . $loan->due_date->format('d/m/Y')
+        );
+
+        return redirect()->back()->with('success', 'Perpanjangan disetujui');
+    }
+
+    // Admin menolak perpanjangan
+    public function rejectExtend($id)
+    {
+        $loan = Loan::findOrFail($id);
+
+        if ($loan->extend_status !== 'menunggu') {
+            return redirect()->back()->with('error', 'Tidak ada pengajuan perpanjangan');
+        }
+
+        $loan->extend_status = 'ditolak';
+        $loan->save();
+
+        Notification::send(
+            $loan->user_id,
+            '❌ Perpanjangan Ditolak',
+            "Perpanjangan buku '{$loan->book->judul}' ditolak oleh admin."
+        );
+
+        return redirect()->back()->with('success', 'Perpanjangan ditolak');
     }
 }

@@ -45,10 +45,10 @@ let notifications = [];
 // Ambil data peminjaman dari database
 async function loadLoans() {
     try {
-        const response = await fetch('/api/anggota/loans');
+        const response = await fetch("{{ url('api/anggota/loans') }}");
         loans = await response.json();
         updateNotifBadge();
-        renderBooks(); // Re-render setelah data loans berubah
+        renderBooks();
     } catch (error) {
         console.error('Gagal load loans:', error);
     }
@@ -57,7 +57,7 @@ async function loadLoans() {
 // Ambil notifikasi
 async function loadNotifications() {
     try {
-        const response = await fetch('/api/anggota/notifications');
+        const response = await fetch("{{ url('api/anggota/notifications') }}");
         notifications = await response.json();
         updateNotifBadge();
     } catch (error) {
@@ -103,10 +103,10 @@ function escapeHtml(str) {
 
 // Fungsi pinjam buku via AJAX
 async function pinjamBuku(bookId) {
-    console.log('Tombol diklik, bookId:', bookId); // Cek apakah fungsi terpanggil
+    console.log('Tombol diklik, bookId:', bookId);
     
     try {
-        const response = await fetch(`/pinjam/${bookId}`, {
+        const response = await fetch("{{ url('pinjam') }}/" + bookId, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -116,11 +116,11 @@ async function pinjamBuku(bookId) {
         });
 
         const result = await response.json();
-        console.log('Response:', result); // Cek response dari server
+        console.log('Response:', result);
 
         if (response.ok) {
             alert('✅ ' + result.message);
-            location.reload(); // Refresh halaman
+            location.reload();
         } else {
             alert('❌ ' + (result.message || 'Gagal meminjam buku'));
         }
@@ -129,10 +129,11 @@ async function pinjamBuku(bookId) {
         alert('❌ Terjadi kesalahan: ' + error.message);
     }
 }
+
 // Ambil data buku terbaru
 async function loadBooks() {
     try {
-        const response = await fetch('/api/books');
+        const response = await fetch("{{ url('api/books') }}");
         books = await response.json();
         renderBooks();
     } catch (error) {
@@ -153,7 +154,7 @@ function renderBooks() {
     );
 
     if (filteredBooks.length === 0) {
-        grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-10">📚 Tidak ada buku yang ditemukan.</div>';
+        grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-10">📚 Tidak ada buku. Silakan tambah buku baru.</div>';
         return;
     }
 
@@ -163,24 +164,44 @@ function renderBooks() {
         const kategoriNama = book.category ? book.category.nama : '-';
         
         grid.innerHTML += `
-            <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition">
-                <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
-                <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
-                
-                <button onclick="pinjamBuku(${book.id})" 
-                    class="w-full mt-4 ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-2 rounded-lg transition"
-                    ${!available ? 'disabled' : ''}>
-                    ${alreadyBorrowed ? '📌 Sedang Dipinjam/Menunggu' : (book.stok > 0 ? '📖 Ajukan Peminjaman' : '❌ Stok Habis')}
-                </button>
+            <div class="bg-white p-2 rounded-xl shadow hover:shadow-lg transition flex flex-col">
+                <!-- Bagian atas: info + sampul (flex row) -->
+                <div class="flex gap-2">
+                    <!-- Info Buku di kiri -->
+                    <div class="flex-1">
+                        <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-hashtag"></i> Kode: ${book.kode_buku || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-barcode"></i> ISBN: ${book.isbn || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-pin"></i> Rak: ${book.lokasi_rak || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-file-alt"></i> Halaman: ${book.jumlah_halaman || '-'}</p>
+                        <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
+                    </div>
+
+                    <!-- Sampul di kanan -->
+                    <div class="flex-shrink-0">
+                        ${book.sampul ? 
+                            `<img src="{{ url('') }}/${book.sampul}" class="w-40 h-56 object-cover rounded-lg border">` : 
+                            `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
+                        }
+                    </div>
+                </div>
+
+                <!-- Tombol di bawah (full width, terpisah) -->
+                <div class="mt-2">
+                    <button onclick="pinjamBuku(${book.id})" 
+                        class="w-full ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-1.5 rounded-lg text-sm transition"
+                        ${!available ? 'disabled' : ''}>
+                        ${alreadyBorrowed ? '📌 Sedang Dipinjam' : (book.stok > 0 ? '📖 Ajukan Peminjaman' : '❌ Stok Habis')}
+                    </button>
+                </div>
             </div>
         `;
     });
 }
-
 // Event listener search
 document.getElementById('search').addEventListener('input', renderBooks);
 

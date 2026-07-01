@@ -115,7 +115,7 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribut
 // Load data anggota dari database
 async function loadAnggota() {
     try {
-        const response = await fetch('/api/anggota');
+        const response = await fetch("{{ url('api/anggota') }}");
         anggota = await response.json();
         renderAnggota();
     } catch (error) {
@@ -225,11 +225,11 @@ document.getElementById('anggotaForm').addEventListener('submit', async function
     let url, method, body;
 
     if (editId) {
-        url = `/admin/anggota/${editId}`;
+        url = "{{ url('admin/anggota') }}/" + editId;
         method = 'PUT';
         body = { nim, name, email, prodi, phone, password, _method: 'PUT' };
     } else {
-        url = '/admin/anggota';
+        url = "{{ url('admin/anggota') }}";
         method = 'POST';
         body = { nim, name, email, prodi, phone, password };
     }
@@ -260,7 +260,7 @@ document.getElementById('anggotaForm').addEventListener('submit', async function
 
 async function editAnggota(id) {
     try {
-        const response = await fetch(`/admin/anggota/${id}/edit`);
+        const response = await fetch("{{ url('admin/anggota') }}/" + id + "/edit");
         const angg = await response.json();
 
         document.getElementById('anggotaId').value = angg.id;
@@ -286,7 +286,7 @@ async function deleteAnggota(id) {
     const angg = anggota.find(a => a.id === id);
     if (confirm(`Yakin ingin menghapus anggota "${angg?.name}"?`)) {
         try {
-            const response = await fetch(`/admin/anggota/${id}`, {
+            const response = await fetch("{{ url('admin/anggota') }}/" + id, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -308,7 +308,7 @@ async function deleteAnggota(id) {
 
 async function toggleStatus(id) {
     try {
-        const response = await fetch(`/admin/anggota/${id}/toggle-status`, {
+        const response = await fetch("{{ url('admin/anggota') }}/" + id + "/toggle-status", {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',

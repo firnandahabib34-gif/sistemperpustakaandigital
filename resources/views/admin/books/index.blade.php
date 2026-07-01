@@ -33,11 +33,17 @@
         <div class="p-6">
             <form id="bookForm" enctype="multipart/form-data">
                 <input type="hidden" id="bookId" name="book_id">
-                
+
                 <div class="mb-3">
                     <label class="block text-sm font-medium mb-1">Judul Buku <span class="text-red-500">*</span></label>
                     <input id="judul" type="text" placeholder="Masukkan judul buku" 
                         class="w-full p-2 border rounded-lg" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Kode Buku</label>
+                    <input id="kode_buku" type="text" placeholder="Contoh: BK-001" 
+                        class="w-full p-2 border rounded-lg">
                 </div>
 
                 <div class="mb-3">
@@ -148,39 +154,41 @@ function renderBooks() {
     filteredBooks.forEach(book => {
         const kategoriNama = book.category ? book.category.nama : '-';
         
-            grid.innerHTML += `
-        <div class="bg-white p-2 rounded-xl shadow hover:shadow-lg transition flex gap-2">
-            <!-- Info Buku (di kiri) -->
-            <div class="flex-1">
-                <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-barcode"></i> ISBN: ${book.isbn || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-pin"></i> Rak: ${book.lokasi_rak || '-'}</p>
-                <p class="text-sm text-gray-500 mt-1"><i class="fas fa-file-alt"></i> Halaman: ${book.jumlah_halaman || '-'}</p>
-                <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
+        grid.innerHTML += `
+            <div class="bg-white p-2 rounded-xl shadow hover:shadow-lg transition flex gap-2">
+                <!-- Info Buku (di kiri) -->
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-hashtag"></i> Kode: ${book.kode_buku || '-'}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-barcode"></i> ISBN: ${book.isbn || '-'}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-pin"></i> Rak: ${book.lokasi_rak || '-'}</p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-file-alt"></i> Halaman: ${book.jumlah_halaman || '-'}</p>
+                    <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
+                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-align-left"></i> Deskripsi: ${book.deskripsi ? escapeHtml(book.deskripsi.substring(0, 100)) + (book.deskripsi.length > 100 ? '...' : '') : '-'}</p>
 
-                <div class="mt-3 flex gap-2">
-                    <button onclick="editBook(${book.id})" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1 rounded text-sm transition cursor-pointer">
-                        ✏️ Edit
-                    </button>
-                    <button onclick="deleteBook(${book.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
-                        🗑️ Hapus
-                    </button>
+                    <div class="mt-3 flex gap-2">
+                        <button onclick="editBook(${book.id})" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1 rounded text-sm transition cursor-pointer">
+                            ✏️ Edit
+                        </button>
+                        <button onclick="deleteBook(${book.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
+                            🗑️ Hapus
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sampul (di kanan) -->
+                <div class="flex-shrink-0">
+                    ${book.sampul ? 
+                        `<img src="{{ url('') }}/${book.sampul}" class="w-40 h-56 object-cover rounded-lg border">` : 
+                        `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
+                    }
                 </div>
             </div>
-
-            <!-- Sampul (di kanan) -->
-            <div class="flex-shrink-0">
-                ${book.sampul ? 
-                    `<img src="/${book.sampul}" class="w-40 h-60 object-cover rounded-lg border">` : 
-                    `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
-                }
-            </div>
-        </div>
-    `;
+        `;
     });
 }
 
@@ -199,6 +207,7 @@ function escapeHtml(str) {
 // ============================================================
 function openModal() {
     editId = null;
+    document.getElementById('kode_buku').value = '';
     document.getElementById('bookId').value = '';
     document.getElementById('judul').value = '';
     document.getElementById('penulis').value = '';
@@ -227,7 +236,7 @@ function closeModal() {
 // ============================================================
 async function loadCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch("{{ url('api/categories') }}");
         const categories = await response.json();
         
         const select = document.getElementById('category_id');
@@ -267,6 +276,7 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
     e.preventDefault();
     
     const judul = document.getElementById('judul').value.trim();
+    const kode_buku = document.getElementById('kode_buku').value.trim();
     const penulis = document.getElementById('penulis').value.trim();
     const category_id = document.getElementById('category_id').value;
     const stok = parseInt(document.getElementById('stok').value);
@@ -285,6 +295,7 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
 
     const formData = new FormData();
     formData.append('judul', judul);
+    formData.append('kode_buku', kode_buku);
     formData.append('penulis', penulis);
     formData.append('category_id', category_id);
     formData.append('stok', stok);
@@ -300,11 +311,11 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
 
     let url, method;
     if (editId) {
-        url = `/admin/books/${editId}`;
+        url = "{{ url('admin/books') }}/" + editId;
         method = 'POST';
         formData.append('_method', 'PUT');
     } else {
-        url = '/admin/books';
+        url = "{{ url('admin/books') }}";
         method = 'POST';
     }
 
@@ -336,9 +347,9 @@ document.getElementById('bookForm').addEventListener('submit', async function(e)
 // ============================================================
 async function editBook(id) {
     try {
-        const response = await fetch(`/admin/books/${id}/edit`);
+        const response = await fetch("{{ url('admin/books') }}/" + id + "/edit");
         const book = await response.json();
-
+        document.getElementById('kode_buku').value = book.kode_buku || '';
         document.getElementById('bookId').value = book.id;
         document.getElementById('judul').value = book.judul;
         document.getElementById('penulis').value = book.penulis;
@@ -352,7 +363,7 @@ async function editBook(id) {
         document.getElementById('jumlah_halaman').value = book.jumlah_halaman || '';
         
         if (book.sampul) {
-            document.getElementById('preview_img').src = '/' + book.sampul;
+            document.getElementById('preview_img').src = "{{ url('') }}/" + book.sampul;
             document.getElementById('preview_sampul').classList.remove('hidden');
         } else {
             document.getElementById('preview_sampul').classList.add('hidden');
@@ -363,7 +374,7 @@ async function editBook(id) {
         document.getElementById('modal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     } catch (error) {
-        alert('Gagal mengambil data buku');
+        alert('Gagal mengambil数据 buku');
     }
 }
 
@@ -374,7 +385,7 @@ async function deleteBook(id) {
     const book = books.find(b => b.id === id);
     if (confirm(`Yakin ingin menghapus buku "${book?.judul}"?`)) {
         try {
-            const response = await fetch(`/admin/books/${id}`, {
+            const response = await fetch("{{ url('admin/books') }}/" + id, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

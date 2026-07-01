@@ -19,6 +19,7 @@ public function store(Request $request)
 {
     $request->validate([
         'judul' => 'required|string|max:255',
+        'kode_buku' => 'nullable|string|max:20|unique:books,kode_buku',
         'penulis' => 'required|string|max:255',
         'category_id' => 'nullable|exists:categories,id',
         'stok' => 'required|integer|min:0',
@@ -61,6 +62,7 @@ public function store(Request $request)
 
     $request->validate([
         'judul' => 'required|string|max:255',
+        'kode_buku' => 'nullable|string|max:20|unique:books,kode_buku',
         'penulis' => 'required|string|max:255',
         'category_id' => 'nullable|exists:categories,id',
         'stok' => 'required|integer|min:0',

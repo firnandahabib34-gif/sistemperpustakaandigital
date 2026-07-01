@@ -57,7 +57,7 @@ let notifications = [];
 // Ambil notifikasi dari database
 async function loadNotifications() {
     try {
-        const response = await fetch('/api/anggota/notifications');
+        const response = await fetch("{{ url('api/anggota/notifications') }}");
         notifications = await response.json();
         updateNotifBadge();
     } catch (error) {
@@ -152,56 +152,104 @@ function renderLoans() {
                          </div>`;
         }
         
-        return `
-            <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition border-l-4 ${config.border} overflow-hidden">
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1">
-                            <h3 class="font-bold text-lg text-gray-800">${escapeHtml(book.judul || 'Buku tidak ditemukan')}</h3>
-                            <p class="text-sm text-gray-500 mt-1">ID Peminjaman: #${loan.id}</p>
-                        </div>
-                        <div class="px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text}">
-                            ${config.icon} ${config.label}
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2 text-sm">
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <i class="fas fa-calendar-alt w-4 text-gray-400"></i>
-                            <span>Pinjam: ${new Date(loan.borrow_date).toLocaleDateString('id-ID')}</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <i class="fas fa-hourglass-end w-4 text-gray-400"></i>
-                            <span>Jatuh Tempo: ${new Date(loan.due_date).toLocaleDateString('id-ID')}</span>
-                        </div>
-                        ${loan.return_date ? `
-                        <div class="flex items-center gap-2 text-gray-600">
-                            <i class="fas fa-undo-alt w-4 text-gray-400"></i>
-                            <span>Dikembalikan: ${new Date(loan.return_date).toLocaleDateString('id-ID')}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                    
-                    ${lateInfo}
-                    ${dendaInfo}
-                    
-                    ${loan.status === 'dipinjam' ? `
-                    <form method="POST" action="/pinjam/${loan.id}/confirm-return" class="mt-4 pt-3 border-t">
-                        <input type="hidden" name="_token" value="${csrfToken}">
-                        <button type="submit" class="w-full bg-green-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-medium transition" onclick="return confirm('Yakin sudah mengembalikan buku?')">
-                             Kembalikan Buku
-                        </button>
-                    </form>
-                    ` : ''}
-                    
-                    ${loan.status === 'menunggu_validasi' ? `
-                    <div class="mt-4 pt-3 border-t text-center text-sm text-gray-500">
-                        ⏳ Menunggu validasi petugas perpustakaan
-                    </div>
-                    ` : ''}
+       return `
+    <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition border-l-4 ${config.border} overflow-hidden">
+        <div class="p-5">
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1">
+                    <h3 class="font-bold text-lg text-gray-800">${escapeHtml(book.judul || 'Buku tidak ditemukan')}</h3>
+                    <p class="text-sm text-gray-500 mt-1">ID Peminjaman: #${loan.id}</p>
+                </div>
+                <div class="px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text}">
+                    ${config.icon} ${config.label}
                 </div>
             </div>
-        `;
+            
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center gap-2 text-gray-600">
+                    <i class="fas fa-calendar-alt w-4 text-gray-400"></i>
+                    <span>Pinjam: ${new Date(loan.borrow_date).toLocaleDateString('id-ID')}</span>
+                </div>
+                <div class="flex items-center gap-2 text-gray-600">
+                    <i class="fas fa-hourglass-end w-4 text-gray-400"></i>
+                    <span>Jatuh Tempo: ${new Date(loan.due_date).toLocaleDateString('id-ID')}</span>
+                </div>
+                ${loan.return_date ? `
+                <div class="flex items-center gap-2 text-gray-600">
+                    <i class="fas fa-undo-alt w-4 text-gray-400"></i>
+                    <span>Dikembalikan: ${new Date(loan.return_date).toLocaleDateString('id-ID')}</span>
+                </div>
+                ` : `
+                <div class="flex items-center gap-2 text-gray-400">
+                    <i class="fas fa-undo-alt w-4"></i>
+                    <span>Belum dikembalikan</span>
+                </div>
+                `}
+                ${loan.fine > 0 ? `
+                <div class="flex items-center gap-2 text-red-600 font-semibold">
+                    <i class="fas fa-money-bill w-4"></i>
+                    <span>Denda: Rp ${loan.fine.toLocaleString('id-ID')}</span>
+                </div>
+                ` : ''}
+            </div>
+            
+            ${lateInfo}
+            ${dendaInfo}
+            
+            ${loan.status === 'dipinjam' ? `
+            <div class="mt-3 flex gap-2">
+                ${loan.extend_status === null || loan.extend_status === '' ? `
+                <form method="POST" action="{{ url('pinjam') }}/${loan.id}/extend" class="flex-1">
+                    <input type="hidden" name="_token" value="${csrfToken}">
+                    <button type="submit" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-2 rounded-lg text-sm font-medium transition" onclick="return confirm('Ajukan perpanjangan 7 hari?')">
+                        📅 Ajukan Perpanjang
+                    </button>
+                </form>
+                ` : ''}
+                
+                ${loan.extend_status === 'menunggu' ? `
+                <div class="flex-1 text-center text-sm text-yellow-600 bg-yellow-50 py-2 rounded-lg">
+                    ⏳ Menunggu admin
+                </div>
+                ` : ''}
+                
+                ${loan.extend_status === 'disetujui' ? `
+                <div class="flex-1 text-center text-sm text-green-600 bg-green-50 py-2 rounded-lg">
+                    ✅ Perpanjangan Disetujui
+                </div>
+                ` : ''}
+                
+                ${loan.extend_status === 'ditolak' ? `
+                <div class="flex-1 text-center text-sm text-red-600 bg-red-50 py-2 rounded-lg">
+                    ❌ Perpanjangan Ditolak
+                </div>
+                ` : ''}
+                
+                <!-- Tombol Kembalikan -->
+                <form method="POST" action="{{ url('pinjam') }}/${loan.id}/confirm-return" class="flex-1">
+                    <input type="hidden" name="_token" value="${csrfToken}">
+                    <button type="submit" class="w-full bg-green-500 hover:bg-blue-600 text-white py-2 rounded-lg text-sm font-medium transition" onclick="return confirm('Yakin sudah mengembalikan buku?')">
+                        📤 Kembalikan
+                    </button>
+                </form>
+            </div>
+            ` : ''}
+            
+            ${loan.extended_at ? `
+            <div class="flex items-center gap-2 text-blue-600 text-sm">
+                <i class="fas fa-clock w-4"></i>
+                <span>Diperpanjang: ${new Date(loan.extended_at).toLocaleDateString('id-ID')}</span>
+            </div>
+            ` : ''}
+
+            ${loan.status === 'menunggu_validasi' ? `
+            <div class="mt-4 pt-3 border-t text-center text-sm text-gray-500">
+                ⏳ Menunggu validasi petugas perpustakaan
+            </div>
+            ` : ''}
+        </div>
+    </div>
+`;
     }).join('');
 }
 

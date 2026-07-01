@@ -9,17 +9,18 @@ class Book extends Model
     protected $table = 'books';
     
    protected $fillable = [
-    'judul', 
-    'penulis', 
-    'category_id', 
-    'stok', 
-    'penerbit', 
+    'kode_buku',      
+    'judul',
+    'penulis',
+    'category_id',
+    'stok',
+    'penerbit',
     'tahun',
-    'isbn',           // ← WAJIB ADA
-    'lokasi_rak',     // ← WAJIB ADA
-    'deskripsi',      // ← WAJIB ADA
-    'jumlah_halaman', // ← WAJIB ADA
-    'sampul'          // ← WAJIB ADA
+    'isbn',
+    'lokasi_rak',
+    'deskripsi',
+    'jumlah_halaman',
+    'sampul'
 ];
 
     // Relasi ke kategori

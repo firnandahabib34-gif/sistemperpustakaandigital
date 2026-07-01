@@ -4,39 +4,39 @@
 
 @section('content')
 
-<!-- Header -->
-<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-    <div>
-        <h1 class="text-2xl font-bold">Pengembalian Buku</h1>
-        <p class="text-gray-500 text-sm">Proses pengembalian buku yang sudah dikonfirmasi anggota</p>
-    </div>
-    <div class="flex gap-2">
-        <button onclick="filterPengembalian('semua')" id="filterSemua" class="px-3 py-1 rounded text-sm bg-gray-200 hover:bg-gray-300">Semua</button>
-        <button onclick="filterPengembalian('menunggu_validasi')" id="filterMenunggu" class="px-3 py-1 rounded text-sm bg-purple-100 text-purple-700 hover:bg-purple-200">Menunggu Validasi</button>
-        <button onclick="filterPengembalian('dikembalikan')" id="filterKembali" class="px-3 py-1 rounded text-sm bg-green-100 text-green-700 hover:bg-green-200">Sudah Kembali</button>
-    </div>
+<div class="mb-6">
+    <h1 class="text-2xl font-bold">Pengembalian Buku</h1>
+    <p class="text-gray-500 text-sm">Proses pengembalian buku yang sudah dikonfirmasi anggota</p>
+</div>
+
+<div class="flex flex-wrap gap-2 mb-4">
+    <button onclick="filterPengembalian('semua')" id="filterSemua" class="px-3 py-1 rounded text-sm bg-indigo-600 text-white hover:bg-indigo-700 transition">Semua</button>
+    <button onclick="filterPengembalian('menunggu_validasi')" id="filterMenunggu" class="px-3 py-1 rounded text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 transition">⏳ Menunggu Validasi</button>
+    <button onclick="filterPengembalian('dikembalikan')" id="filterKembali" class="px-3 py-1 rounded text-sm bg-green-100 text-green-700 hover:bg-green-200 transition">✅ Sudah Kembali</button>
 </div>
 
 <!-- Pencarian -->
 <input id="cari" type="text" placeholder="Cari NIM anggota atau judul buku..." 
     class="w-full mb-4 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none">
 
-<!-- Tabel Pengembalian -->
 <div class="bg-white rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full">
-            <thead class="bg-gray-50 border-b">
+        <table class="w-full min-w-[1200px]">
+            <thead class="bg-gray-50">
                 <tr>
-                    <th class="text-left p-4 font-semibold text-gray-600">ID</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">NIM</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Nama Anggota</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Judul Buku</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Tanggal Pinjam</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Jatuh Tempo</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Terlambat</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Denda</th>
-                    <th class="text-left p-4 font-semibold text-gray-600">Status</th>
-                    <th class="text-center p-4 font-semibold text-gray-600">Aksi</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">ID</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">NIM</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Anggota</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Judul Buku</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Kode</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">ISBN</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Tgl Pinjam</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Jatuh Tempo</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Tgl Kembali</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Telat</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Denda</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Status</th>
+                    <th class="px-3 py-2 text-center text-xs font-semibold text-gray-600 whitespace-nowrap">Aksi</th>
                 </tr>
             </thead>
             <tbody id="tabelPengembalian">
@@ -108,7 +108,7 @@ let peminjamanIdSaatIni = null;
 // Load data dari database
 async function loadLoans() {
     try {
-        const response = await fetch('/api/admin/loans');
+        const response = await fetch("{{ url('api/admin/loans') }}");
         semuaPeminjaman = await response.json();
         tampilkanPengembalian();
     } catch (error) {
@@ -154,64 +154,64 @@ function tampilkanPengembalian() {
     }
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="text-center text-gray-500 py-10">📭 Tidak ada data pengembalian.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" class="text-center text-gray-500 py-10">📭 Tidak ada data pengembalian.</td></tr>`;
         return;
     }
 
-filtered.forEach(peminjaman => {
-    const user = peminjaman.user || {};
-    const book = peminjaman.book || {};
-    
-    // 🔥 PERBAIKAN DI SINI
-    let terlambat, denda;
-    if (peminjaman.status === 'dikembalikan') {
-        // Ambil dari database jika sudah dikembalikan
-        denda = peminjaman.fine || 0;
-        terlambat = denda > 0 ? Math.ceil(denda / 2000) : 0;
-    } else {
-        // Hitung otomatis jika masih menunggu validasi
-        terlambat = hitungTerlambat(peminjaman.due_date);
-        denda = hitungDenda(terlambat);
-    }
-    
-    let statusClass = '';
-    let statusText = '';
-    if (peminjaman.status === 'menunggu_validasi') {
-        statusClass = 'bg-purple-100 text-purple-700';
-        statusText = 'Menunggu Validasi';
-    } else {
-        statusClass = 'bg-green-100 text-green-700';
-        statusText = 'Dikembalikan';
-    }
-    
-    tbody.innerHTML += `
-        <tr class="border-b hover:bg-gray-50">
-            <td class="p-4 text-sm">${peminjaman.id}</td>
-            <td class="p-4 font-mono text-sm">${user.nim || '-'}</td>
-            <td class="p-4">${user.name || '-'}</td>
-            <td class="p-4 font-medium">${book.judul || '-'}</td>
-            <td class="p-4 text-sm">${new Date(peminjaman.borrow_date).toLocaleDateString('id-ID')}</td>
-            <td class="p-4 text-sm">${new Date(peminjaman.due_date).toLocaleDateString('id-ID')}</td>
-            <td class="p-4 text-sm ${terlambat > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}">
-                ${terlambat > 0 ? terlambat + ' hari' : '-'}
-            </td>
-            <td class="p-4 text-sm font-semibold ${denda > 0 ? 'text-red-600' : 'text-gray-500'}">
-                ${denda > 0 ? 'Rp ' + denda.toLocaleString('id-ID') : '-'}
-            </td>
-            <td class="p-4">
-                <span class="px-2 py-1 rounded-full text-xs ${statusClass}">${statusText}</span>
-            </td>
-            <td class="p-4 text-center whitespace-nowrap">
-                ${peminjaman.status === 'menunggu_validasi' ? 
-                    `<button onclick="bukaModalKembalikan(${peminjaman.id})" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs">
-                        ✅ Validasi Kembalikan
-                    </button>` : 
-                    `<span class="text-gray-400 text-xs">Sudah Kembali</span>`
-                }
-            </td>
-        </tr>
-    `;
-});
+    filtered.forEach(peminjaman => {
+        const user = peminjaman.user || {};
+        const book = peminjaman.book || {};
+        
+        let terlambat, denda;
+        if (peminjaman.status === 'dikembalikan') {
+            denda = peminjaman.fine || 0;
+            terlambat = denda > 0 ? Math.ceil(denda / 2000) : 0;
+        } else {
+            terlambat = hitungTerlambat(peminjaman.due_date);
+            denda = hitungDenda(terlambat);
+        }
+        
+        let statusClass = '';
+        let statusText = '';
+        if (peminjaman.status === 'menunggu_validasi') {
+            statusClass = 'bg-purple-100 text-purple-700';
+            statusText = '⏳ Menunggu Validasi';
+        } else {
+            statusClass = 'bg-green-100 text-green-700';
+            statusText = '✅ Dikembalikan';
+        }
+        
+        tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="px-3 py-2 text-sm font-mono whitespace-nowrap">#${peminjaman.id}</td>
+                <td class="px-3 py-2 text-sm font-mono whitespace-nowrap">${user.nim || '-'}</td>
+                <td class="px-3 py-2 text-sm whitespace-nowrap">${user.name || '-'}</td>
+                <td class="px-3 py-2 text-sm font-medium whitespace-nowrap">${book.judul || '-'}</td>
+                <td class="px-3 py-2 text-sm text-gray-500 whitespace-nowrap">${book.kode_buku || '-'}</td>
+                <td class="px-3 py-2 text-sm text-gray-500 whitespace-nowrap">${book.isbn || '-'}</td>
+                <td class="px-3 py-2 text-sm whitespace-nowrap">${new Date(peminjaman.borrow_date).toLocaleDateString('id-ID')}</td>
+                <td class="px-3 py-2 text-sm whitespace-nowrap">${new Date(peminjaman.due_date).toLocaleDateString('id-ID')}</td>
+                <td class="px-3 py-2 text-sm whitespace-nowrap">${peminjaman.return_date ? new Date(peminjaman.return_date).toLocaleDateString('id-ID') : '-'}</td>
+                <td class="px-3 py-2 text-sm ${terlambat > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'} whitespace-nowrap">
+                    ${terlambat > 0 ? terlambat + ' hari' : '-'}
+                </td>
+                <td class="px-3 py-2 text-sm font-semibold ${denda > 0 ? 'text-red-600' : 'text-gray-500'} whitespace-nowrap">
+                    ${denda > 0 ? 'Rp ' + denda.toLocaleString('id-ID') : '-'}
+                </td>
+                <td class="px-3 py-2 whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded-full text-xs ${statusClass}">${statusText}</span>
+                </td>
+                <td class="px-3 py-2 text-center whitespace-nowrap">
+                    ${peminjaman.status === 'menunggu_validasi' ? 
+                        `<button onclick="bukaModalKembalikan(${peminjaman.id})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs">
+                            ✅ Kembali
+                        </button>` : 
+                        `<span class="text-gray-400 text-xs">-</span>`
+                    }
+                </td>
+            </tr>
+        `;
+    });
 }
 
 function bukaModalKembalikan(id) {
@@ -241,7 +241,7 @@ async function prosesKembalikan() {
     
     if (confirm('Yakin anggota sudah mengembalikan buku secara fisik?')) {
         try {
-            const response = await fetch(`/admin/pengembalian/${id}/validate`, {
+            const response = await fetch("{{ url('admin/pengembalian') }}/" + id + "/validate", {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ async function prosesKembalikan() {
             if (response.ok) {
                 alert('✅ ' + result.message);
                 tutupModal();
-                loadLoans(); // Refresh data
+                loadLoans();
             } else {
                 alert('❌ ' + (result.message || 'Gagal memproses pengembalian'));
             }

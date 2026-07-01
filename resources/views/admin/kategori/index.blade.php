@@ -83,7 +83,7 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribut
 // Load data kategori dari database
 async function loadCategories() {
     try {
-        const response = await fetch('/api/categories');
+        const response = await fetch("{{ url('api/categories') }}");
         categories = await response.json();
         renderKategori();
     } catch (error) {
@@ -172,11 +172,11 @@ document.getElementById('kategoriForm').addEventListener('submit', async functio
     let url, method, body;
 
     if (editId) {
-        url = `/admin/kategori/${editId}`;
+        url = "{{ url('admin/kategori') }}/" + editId;
         method = 'PUT';
         body = { nama, deskripsi, _method: 'PUT' };
     } else {
-        url = '/admin/kategori';
+        url = "{{ url('admin/kategori') }}";
         method = 'POST';
         body = { nama, deskripsi };
     }
@@ -196,7 +196,7 @@ document.getElementById('kategoriForm').addEventListener('submit', async functio
         if (response.ok) {
             alert(editId ? '✅ Kategori berhasil diupdate!' : '✅ Kategori berhasil ditambahkan!');
             closeModal();
-            loadCategories(); // Refresh data
+            loadCategories();
         } else {
             alert('❌ Gagal menyimpan kategori: ' + (result.message || 'Terjadi kesalahan'));
         }
@@ -207,7 +207,7 @@ document.getElementById('kategoriForm').addEventListener('submit', async functio
 
 async function editKategori(id) {
     try {
-        const response = await fetch(`/admin/kategori/${id}/edit`);
+        const response = await fetch("{{ url('admin/kategori') }}/" + id + "/edit");
         const kategori = await response.json();
 
         document.getElementById('kategoriId').value = kategori.id;
@@ -227,7 +227,7 @@ async function deleteKategori(id) {
     const kategori = categories.find(k => k.id === id);
     if (confirm(`Yakin ingin menghapus kategori "${kategori?.nama}"?`)) {
         try {
-            const response = await fetch(`/admin/kategori/${id}`, {
+            const response = await fetch("{{ url('admin/kategori') }}/" + id, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -237,7 +237,7 @@ async function deleteKategori(id) {
 
             if (response.ok) {
                 alert('🗑️ Kategori berhasil dihapus!');
-                loadCategories(); // Refresh data
+                loadCategories();
             } else {
                 alert('❌ Gagal menghapus kategori');
             }

@@ -88,7 +88,7 @@ let notifications = [];
 // Ambil notifikasi dari database
 async function loadNotifications() {
     try {
-        const response = await fetch('/api/anggota/notifications');
+        const response = await fetch("{{ url('api/anggota/notifications') }}");
         notifications = await response.json();
         updateNotifBadge();
     } catch (error) {

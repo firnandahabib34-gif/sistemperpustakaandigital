@@ -20,27 +20,33 @@
         <nav class="space-y-1 px-5">
             <div class="text-blue-200 text-xs mb-2">MAIN MENU</div>
             
-            <a href="/dashboard-admin" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-admin') ? 'bg-blue-600' : '' }}">
+            <!-- Dashboard -->
+            <a href="{{ url('/dashboard-admin') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('dashboard-admin') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tachometer-alt w-5"></i> Dashboard
             </a>
             
-            <a href="/admin/books" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/books') ? 'bg-blue-600' : '' }}">
+            <!-- Kelola Buku -->
+            <a href="{{ url('/admin/books') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/books') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-book w-5"></i> Kelola Buku
             </a>
             
+            <!-- Kelola Anggota -->
             <a href="{{ route('admin.anggota') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->routeIs('admin.anggota*') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-users w-5"></i> Kelola Anggota
             </a>
             
-            <a href="{{ route('admin.loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition">
+            <!-- Peminjaman -->
+            <a href="{{ route('admin.loans') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->routeIs('admin.loans*') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-hand-holding-heart w-5"></i> Peminjaman
             </a>
             
-            <a href="/admin/pengembalian" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/pengembalian') ? 'bg-blue-600' : '' }}">
+            <!-- Pengembalian -->
+            <a href="{{ url('/admin/pengembalian') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/pengembalian') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-undo-alt w-5"></i> Pengembalian
             </a>
 
-            <a href="/admin/kategori" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/kategori') ? 'bg-blue-600' : '' }}">
+            <!-- Kelola Kategori -->
+            <a href="{{ url('/admin/kategori') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/kategori') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tags w-5"></i> Kelola Kategori
             </a>
         </nav>

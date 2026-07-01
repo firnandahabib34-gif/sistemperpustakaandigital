@@ -17,14 +17,20 @@ class Loan extends Model
         'return_date',
         'status',
         'fine',
-        'anggota_confirmed'
+        'anggota_confirmed',
+        'extended_at',
+        'extended_count',
+        'extend_status',
+        'extend_requested_at'
     ];
 
     protected $casts = [
         'borrow_date' => 'date',
         'due_date' => 'date',
         'return_date' => 'date',
-        'anggota_confirmed' => 'boolean'
+        'anggota_confirmed' => 'boolean',
+        'extended_at' => 'datetime',
+        'extend_requested_at' => 'datetime',
     ];
 
     // Relasi ke user (anggota)

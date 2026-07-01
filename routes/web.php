@@ -48,18 +48,21 @@ Route::get('/dashboard-anggota', function () {
 // ============================================================
 Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     
+    // CRUD Buku
     Route::get('/books', [BookController::class, 'index'])->name('books');
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
     Route::get('/books/{id}/edit', [BookController::class, 'edit'])->name('books.edit');
     Route::put('/books/{id}', [BookController::class, 'update'])->name('books.update');
     Route::delete('/books/{id}', [BookController::class, 'destroy'])->name('books.destroy');
     
+    // CRUD Kategori
     Route::get('/kategori', [CategoryController::class, 'index'])->name('kategori');
     Route::post('/kategori', [CategoryController::class, 'store'])->name('kategori.store');
     Route::get('/kategori/{id}/edit', [CategoryController::class, 'edit'])->name('kategori.edit');
     Route::put('/kategori/{id}', [CategoryController::class, 'update'])->name('kategori.update');
     Route::delete('/kategori/{id}', [CategoryController::class, 'destroy'])->name('kategori.destroy');
     
+    // CRUD Anggota
     Route::get('/anggota', [AnggotaController::class, 'index'])->name('anggota');
     Route::post('/anggota', [AnggotaController::class, 'store'])->name('anggota.store');
     Route::get('/anggota/{id}/edit', [AnggotaController::class, 'edit'])->name('anggota.edit');
@@ -79,12 +82,13 @@ Route::get('/dashboard-anggota/buku', function () {
 Route::get('/dashboard-anggota/loans', [LoanController::class, 'history'])->name('anggota.loans')->middleware('auth');
 
 // ============================================================
-// ROUTE PEMINJAMAN (DATABASE)
+// ROUTE PEMINJAMAN (ANGGOTA)
 // ============================================================
 Route::middleware('auth')->group(function () {
     Route::post('/pinjam/{book_id}', [LoanController::class, 'store'])->name('pinjam.store');
     Route::get('/riwayat', [LoanController::class, 'history'])->name('riwayat');
     Route::post('/pinjam/{id}/confirm-return', [LoanController::class, 'confirmReturn'])->name('pinjam.confirm-return');
+    Route::post('/pinjam/{id}/extend', [LoanController::class, 'extend'])->name('pinjam.extend');
 });
 
 // ============================================================
@@ -97,6 +101,10 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
     Route::patch('/loans/{id}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::patch('/loans/{id}/reject', [LoanController::class, 'reject'])->name('loans.reject');
     Route::patch('/loans/{id}/return', [LoanController::class, 'returnLoan'])->name('loans.return');
+    
+    // 🔥 PERPANJANGAN (APPROVE & REJECT)
+    Route::patch('/loans/{id}/approve-extend', [LoanController::class, 'approveExtend'])->name('loans.approve-extend');
+    Route::patch('/loans/{id}/reject-extend', [LoanController::class, 'rejectExtend'])->name('loans.reject-extend');
     
     // Pengembalian (halaman khusus)
     Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
