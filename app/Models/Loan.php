@@ -17,6 +17,7 @@ class Loan extends Model
         'return_date',
         'status',
         'fine',
+        'fine_status',
         'anggota_confirmed',
         'extended_at',
         'extended_count',

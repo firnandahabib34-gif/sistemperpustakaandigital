@@ -33,6 +33,19 @@
     </div>
 </div>
 
+<!-- Modal Detail Buku -->
+<div id="detailModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+            <h2 class="text-lg font-bold" id="detailTitle">Detail Buku</h2>
+            <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+        </div>
+        <div id="detailContent" class="p-6">
+            <!-- Konten akan diisi oleh JavaScript -->
+        </div>
+    </div>
+</div>
+
 <script>
 // CSRF Token
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -101,6 +114,92 @@ function escapeHtml(str) {
     });
 }
 
+// Fungsi untuk menampilkan detail buku
+function showDetail(bookId) {
+    const book = books.find(b => b.id === bookId);
+    if (!book) {
+        alert('Buku tidak ditemukan');
+        return;
+    }
+    
+    const modal = document.getElementById('detailModal');
+    const content = document.getElementById('detailContent');
+    const title = document.getElementById('detailTitle');
+    
+    title.textContent = `📖 ${book.judul}`;
+    
+    const kategoriNama = book.category ? book.category.nama : '-';
+    const deskripsi = book.deskripsi || 'Tidak ada deskripsi untuk buku ini.';
+    
+    content.innerHTML = `
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Sampul Buku -->
+            <div class="flex-shrink-0">
+                ${book.sampul ? 
+                    `<img src="{{ url('') }}/${book.sampul}" class="w-full md:w-48 h-64 object-cover rounded-lg border shadow-md">` : 
+                    `<div class="w-full md:w-48 h-64 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-sm">Tidak ada sampul</div>`
+                }
+            </div>
+            
+            <!-- Informasi Buku -->
+            <div class="flex-1 space-y-3">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">${escapeHtml(book.judul)}</h3>
+                    <p class="text-gray-600">oleh ${escapeHtml(book.penulis)}</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div><span class="font-semibold">Kode Buku:</span> ${book.kode_buku || '-'}</div>
+                    <div><span class="font-semibold">Kategori:</span> ${escapeHtml(kategoriNama)}</div>
+                    <div><span class="font-semibold">Penerbit:</span> ${escapeHtml(book.penerbit) || '-'}</div>
+                    <div><span class="font-semibold">Tahun:</span> ${book.tahun || '-'}</div>
+                    <div><span class="font-semibold">ISBN:</span> ${book.isbn || '-'}</div>
+                    <div><span class="font-semibold">Lokasi Rak:</span> ${book.lokasi_rak || '-'}</div>
+                    <div><span class="font-semibold">Halaman:</span> ${book.jumlah_halaman || '-'}</div>
+                    <div><span class="font-semibold">Stok:</span> <span class="font-bold ${book.stok > 0 ? 'text-green-600' : 'text-red-600'}">${book.stok}</span></div>
+                </div>
+                
+                <!-- Deskripsi -->
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-700 mb-2">📝 Deskripsi</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                        <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-line">${escapeHtml(deskripsi)}</p>
+                    </div>
+                </div>
+                
+                <!-- Tombol Aksi -->
+                <div class="flex gap-3 mt-4">
+                    <button onclick="closeDetailModal()" 
+                        class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition">
+                        Tutup
+                    </button>
+                    ${book.stok > 0 ? 
+                        `<button onclick="pinjamBuku(${book.id}); closeDetailModal();" 
+                            class="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg transition flex-1">
+                            📖 Pinjam Buku
+                        </button>` :
+                        `<button disabled 
+                            class="px-4 py-2 bg-gray-400 cursor-not-allowed text-white rounded-lg flex-1">
+                            ❌ Stok Habis
+                        </button>`
+                    }
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDetailModal() {
+    const modal = document.getElementById('detailModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
 // Fungsi pinjam buku via AJAX
 async function pinjamBuku(bookId) {
     console.log('Tombol diklik, bookId:', bookId);
@@ -153,14 +252,35 @@ function renderBooks() {
         (b.penulis && b.penulis.toLowerCase().includes(searchValue))
     );
 
+    // =====================================
+    // HITUNG JUMLAH PINJAMAN YANG MASIH AKTIF
+    // =====================================
+    const jumlahPinjaman = loans.filter(l =>
+        l.status === 'menunggu' ||
+        l.status === 'dipinjam' ||
+        l.status === 'menunggu_validasi'
+    ).length;
+
     if (filteredBooks.length === 0) {
         grid.innerHTML = '<div class="col-span-3 text-center text-gray-500 py-10">📚 Tidak ada buku. Silakan tambah buku baru.</div>';
         return;
     }
 
     filteredBooks.forEach(book => {
-        const alreadyBorrowed = loans.some(l => l.book_id === book.id && (l.status === 'dipinjam' || l.status === 'menunggu'));
-        const available = book.stok > 0 && !alreadyBorrowed;
+        const alreadyBorrowed = loans.some(l =>
+            l.book_id === book.id &&
+            (
+                l.status === 'dipinjam' ||
+                l.status === 'menunggu' ||
+                l.status === 'menunggu_validasi'
+            )
+        );
+
+        const available =
+            book.stok > 0 &&
+            !alreadyBorrowed &&
+            jumlahPinjaman < 3;
+        
         const kategoriNama = book.category ? book.category.nama : '-';
         
         grid.innerHTML += `
@@ -181,27 +301,40 @@ function renderBooks() {
                         <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
                     </div>
 
-                    <!-- Sampul di kanan -->
-                    <div class="flex-shrink-0">
+                    <!-- Sampul di kanan dengan klik untuk detail -->
+                    <div class="flex-shrink-0 cursor-pointer" onclick="showDetail(${book.id})" title="Klik untuk melihat detail">
                         ${book.sampul ? 
-                            `<img src="{{ url('') }}/${book.sampul}" class="w-40 h-56 object-cover rounded-lg border">` : 
-                            `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
+                            `<img src="{{ url('') }}/${book.sampul}" class="w-40 h-56 object-cover rounded-lg border hover:opacity-80 transition">` : 
+                            `<div class="w-40 h-56 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs hover:bg-gray-300 transition">Klik untuk detail</div>`
                         }
                     </div>
                 </div>
 
                 <!-- Tombol di bawah (full width, terpisah) -->
-                <div class="mt-2">
+                <div class="mt-2 flex gap-2">
+                    <button onclick="showDetail(${book.id})" 
+                        class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-1.5 rounded-lg text-sm transition">
+                        📋 Detail
+                    </button>
                     <button onclick="pinjamBuku(${book.id})" 
-                        class="w-full ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-1.5 rounded-lg text-sm transition"
+                        class="flex-1 ${available ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-gray-400 cursor-not-allowed'} text-white py-1.5 rounded-lg text-sm transition"
                         ${!available ? 'disabled' : ''}>
-                        ${alreadyBorrowed ? '📌 Sedang Dipinjam' : (book.stok > 0 ? '📖 Ajukan Peminjaman' : '❌ Stok Habis')}
+                        ${
+                            alreadyBorrowed
+                            ? '📌 Sedang Dipinjam'
+                            : jumlahPinjaman >= 3
+                            ? '🚫 Batas Pinjaman Tercapai'
+                            : book.stok > 0
+                            ? '📖 Ajukan Peminjaman'
+                            : '❌ Stok Habis'
+                        }
                     </button>
                 </div>
             </div>
         `;
     });
 }
+
 // Event listener search
 document.getElementById('search').addEventListener('input', renderBooks);
 

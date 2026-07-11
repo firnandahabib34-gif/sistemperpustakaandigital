@@ -22,7 +22,39 @@
 <!-- Grid Buku -->
 <div id="booksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
-<!-- Modal Tambah/Edit Buku -->
+<!-- ========================================================== -->
+<!-- MODAL DETAIL BUKU -->
+<!-- ========================================================== -->
+<div id="detailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+        <!-- Header Modal Detail - Warna Biru Solid -->
+        <div class="sticky top-0 bg-blue-600 text-white rounded-t-xl px-6 py-4 flex justify-between items-center">
+            <h2 class="text-xl font-bold">
+                <i class="fas fa-book-open mr-2"></i> Detail Buku
+            </h2>
+            <button onclick="closeDetailModal()" class="text-white hover:text-gray-200 text-3xl leading-none">&times;</button>
+        </div>
+        
+        <!-- Body Modal Detail -->
+        <div class="p-6" id="detailContent">
+            <div class="text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <p class="mt-2 text-gray-500">Memuat data buku...</p>
+            </div>
+        </div>
+        
+        <!-- Footer Modal Detail - Tanpa Tombol Cetak -->
+        <div class="sticky bottom-0 bg-gray-50 rounded-b-xl px-6 py-4 flex justify-end gap-2 border-t">
+            <button onclick="closeDetailModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                <i class="fas fa-times mr-1"></i> Tutup
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- MODAL TAMBAH/EDIT BUKU -->
+<!-- ========================================================== -->
 <div id="modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
         <div class="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
@@ -111,7 +143,7 @@
                 </div>
 
                 <div class="flex gap-2">
-                    <button type="submit" class="bg-indigo-500 text-white px-4 py-2 rounded-lg w-full hover:bg-indigo-600 transition">
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg w-full hover:bg-blue-700 transition">
                         Simpan
                     </button>
                     <button type="button" onclick="closeModal()" class="bg-gray-400 text-white px-4 py-2 rounded-lg w-full hover:bg-gray-500 transition">
@@ -132,7 +164,7 @@ let editId = null;
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
 // ============================================================
-// RENDER BUKU
+// RENDER BUKU (DENGAN TOMBOL DETAIL)
 // ============================================================
 function renderBooks() {
     const searchValue = document.getElementById('search').value.toLowerCase();
@@ -155,37 +187,47 @@ function renderBooks() {
         const kategoriNama = book.category ? book.category.nama : '-';
         
         grid.innerHTML += `
-            <div class="bg-white p-2 rounded-xl shadow hover:shadow-lg transition flex gap-2">
-                <!-- Info Buku (di kiri) -->
-                <div class="flex-1">
-                    <h3 class="font-bold text-lg">${escapeHtml(book.judul)}</h3>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-hashtag"></i> Kode: ${book.kode_buku || '-'}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-barcode"></i> ISBN: ${book.isbn || '-'}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-map-pin"></i> Rak: ${book.lokasi_rak || '-'}</p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-file-alt"></i> Halaman: ${book.jumlah_halaman || '-'}</p>
-                    <p class="text-sm mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
-                    <p class="text-sm text-gray-500 mt-1"><i class="fas fa-align-left"></i> Deskripsi: ${book.deskripsi ? escapeHtml(book.deskripsi.substring(0, 100)) + (book.deskripsi.length > 100 ? '...' : '') : '-'}</p>
-
-                    <div class="mt-3 flex gap-2">
-                        <button onclick="editBook(${book.id})" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1 rounded text-sm transition cursor-pointer">
-                            ✏️ Edit
-                        </button>
-                        <button onclick="deleteBook(${book.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
-                            🗑️ Hapus
-                        </button>
+            <div class="bg-white p-4 rounded-xl shadow hover:shadow-lg transition border border-gray-100">
+                <div class="flex gap-4">
+                    <!-- Sampul -->
+                    <div class="flex-shrink-0">
+                        ${book.sampul ? 
+                            `<img src="{{ url('') }}/${book.sampul}" class="w-24 h-32 object-cover rounded-lg border">` : 
+                            `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
+                        }
                     </div>
-                </div>
+                    
+                    <!-- Info Buku -->
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-lg text-blue-600 hover:text-blue-800 cursor-pointer" 
+                            onclick="showDetail(${book.id})">
+                            ${escapeHtml(book.judul)}
+                        </h3>
+                        
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-hashtag"></i> Kode: ${book.kode_buku || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-user"></i> ${escapeHtml(book.penulis)}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-tag"></i> ${escapeHtml(kategoriNama)}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-building"></i> ${escapeHtml(book.penerbit) || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-calendar"></i> ${book.tahun || '-'}</p>
+                        <p class="text-sm text-gray-500 mt-1"><i class="fas fa-boxes"></i> Stok: <span class="font-semibold">${book.stok}</span></p>
+                        
+                        <!-- Deskripsi pendek -->
+                        <p class="text-sm text-gray-500 mt-1 line-clamp-2">
+                            <i class="fas fa-align-left"></i> ${book.deskripsi ? escapeHtml(book.deskripsi.substring(0, 80)) + (book.deskripsi.length > 80 ? '...' : '') : '-'}
+                        </p>
 
-                <!-- Sampul (di kanan) -->
-                <div class="flex-shrink-0">
-                    ${book.sampul ? 
-                        `<img src="{{ url('') }}/${book.sampul}" class="w-40 h-56 object-cover rounded-lg border">` : 
-                        `<div class="w-24 h-32 bg-gray-200 rounded-lg border flex items-center justify-center text-gray-400 text-xs">No Cover</div>`
-                    }
+                        <div class="mt-3 flex gap-2 flex-wrap">
+                            <button onclick="showDetail(${book.id})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
+                                <i class="fas fa-eye mr-1"></i> Detail
+                            </button>
+                            <button onclick="editBook(${book.id})" class="bg-yellow-400 hover:bg-yellow-500 px-3 py-1 rounded text-sm transition cursor-pointer">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </button>
+                            <button onclick="deleteBook(${book.id})" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm transition cursor-pointer">
+                                <i class="fas fa-trash mr-1"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -203,7 +245,130 @@ function escapeHtml(str) {
 }
 
 // ============================================================
-// MODAL
+// SHOW DETAIL BUKU
+// ============================================================
+async function showDetail(id) {
+    const detailContent = document.getElementById('detailContent');
+    const detailModal = document.getElementById('detailModal');
+    
+    // Tampilkan loading
+    detailContent.innerHTML = `
+        <div class="text-center py-10">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p class="mt-2 text-gray-500">Memuat data buku...</p>
+        </div>
+    `;
+    
+    // Tampilkan modal
+    detailModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    try {
+        const response = await fetch("{{ url('admin/books') }}/" + id + "/edit");
+        const book = await response.json();
+        
+        // Format deskripsi
+        const deskripsi = book.deskripsi || '<em class="text-gray-400">Tidak ada deskripsi</em>';
+        const kategoriNama = book.category ? book.category.nama : '-';
+        
+        detailContent.innerHTML = `
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Sampul -->
+                <div class="md:w-1/3 flex justify-center">
+                    ${book.sampul ? 
+                        `<img src="{{ url('') }}/${book.sampul}" class="w-48 md:w-64 object-cover rounded-lg shadow-lg border" style="max-height: 400px;">` : 
+                        `<div class="w-48 h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400">
+                            <i class="fas fa-book fa-4x"></i>
+                        </div>`
+                    }
+                </div>
+                
+                <!-- Informasi Detail -->
+                <div class="md:w-2/3">
+                    <h2 class="text-2xl font-bold text-blue-600 mb-2">${escapeHtml(book.judul)}</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Kode Buku</span>
+                            <p class="font-semibold">${book.kode_buku || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Penulis</span>
+                            <p class="font-semibold">${escapeHtml(book.penulis)}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Kategori</span>
+                            <p class="font-semibold">${escapeHtml(kategoriNama)}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Penerbit</span>
+                            <p class="font-semibold">${escapeHtml(book.penerbit) || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Tahun Terbit</span>
+                            <p class="font-semibold">${book.tahun || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">ISBN</span>
+                            <p class="font-semibold">${book.isbn || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Lokasi Rak</span>
+                            <p class="font-semibold">${book.lokasi_rak || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded">
+                            <span class="text-xs text-gray-500">Jumlah Halaman</span>
+                            <p class="font-semibold">${book.jumlah_halaman || '-'}</p>
+                        </div>
+                        <div class="bg-gray-50 p-2 rounded md:col-span-2">
+                            <span class="text-xs text-gray-500">Stok</span>
+                            <p class="font-semibold ${book.stok > 0 ? 'text-green-600' : 'text-red-600'}">
+                                ${book.stok} ${book.stok > 0 ? '📚 Tersedia' : '❌ Kosong'}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Deskripsi Lengkap -->
+                    <div class="mt-4">
+                        <h4 class="font-bold text-gray-700 mb-2"><i class="fas fa-align-left mr-2"></i>Deskripsi Lengkap:</h4>
+                        <div class="bg-gray-50 p-4 rounded-lg text-gray-700 leading-relaxed text-justify max-h-48 overflow-y-auto">
+                            ${deskripsi}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+    } catch (error) {
+        detailContent.innerHTML = `
+            <div class="text-center py-10 text-red-500">
+                <i class="fas fa-exclamation-circle text-4xl mb-2"></i>
+                <p>Gagal memuat data buku. Silakan coba lagi.</p>
+                <p class="text-sm text-gray-400">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// ============================================================
+// CLOSE DETAIL MODAL
+// ============================================================
+function closeDetailModal() {
+    document.getElementById('detailModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// ============================================================
+// TUTUP MODAL KETIKA KLIK DI LUAR
+// ============================================================
+document.getElementById('detailModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDetailModal();
+    }
+});
+
+// ============================================================
+// MODAL TAMBAH/EDIT
 // ============================================================
 function openModal() {
     editId = null;
@@ -374,7 +539,7 @@ async function editBook(id) {
         document.getElementById('modal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     } catch (error) {
-        alert('Gagal mengambil数据 buku');
+        alert('Gagal mengambil data buku');
     }
 }
 

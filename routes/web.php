@@ -37,16 +37,16 @@ Route::get('/', function () {
 
 Route::get('/dashboard-admin', function () {
     return view('admin.dashboard');
-})->middleware('auth');
+})->middleware(['auth', 'role:admin']);
 
 Route::get('/dashboard-anggota', function () {
     return view('anggota.dashboard');
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);
 
 // ============================================================
 // ROUTE UNTUK ADMIN (CRUD DATABASE)
 // ============================================================
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     
     // CRUD Buku
     Route::get('/books', [BookController::class, 'index'])->name('books');
@@ -77,14 +77,16 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
 Route::get('/dashboard-anggota/buku', function () {
     $books = App\Models\Book::with('category')->get();
     return view('anggota.buku', compact('books'));
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);
 
-Route::get('/dashboard-anggota/loans', [LoanController::class, 'history'])->name('anggota.loans')->middleware('auth');
+Route::get('/dashboard-anggota/loans', [LoanController::class, 'history'])
+    ->name('anggota.loans')
+    ->middleware(['auth', 'role:anggota']);
 
 // ============================================================
 // ROUTE PEMINJAMAN (ANGGOTA)
 // ============================================================
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'role:anggota'])->group(function () {
     Route::post('/pinjam/{book_id}', [LoanController::class, 'store'])->name('pinjam.store');
     Route::get('/riwayat', [LoanController::class, 'history'])->name('riwayat');
     Route::post('/pinjam/{id}/confirm-return', [LoanController::class, 'confirmReturn'])->name('pinjam.confirm-return');
@@ -92,23 +94,42 @@ Route::middleware('auth')->group(function () {
 });
 
 // ============================================================
-// ROUTE ADMIN UNTUK PEMINJAMAN & PENGEMBALIAN
+// ROUTE ADMIN UNTUK PEMINJAMAN, PENGEMBALIAN & DENDA
 // ============================================================
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     
-    // Peminjaman
+    // ============================================================
+    // PEMINJAMAN
+    // ============================================================
     Route::get('/loans', [LoanController::class, 'index'])->name('loans');
     Route::patch('/loans/{id}/approve', [LoanController::class, 'approve'])->name('loans.approve');
     Route::patch('/loans/{id}/reject', [LoanController::class, 'reject'])->name('loans.reject');
-    Route::patch('/loans/{id}/return', [LoanController::class, 'returnLoan'])->name('loans.return');
     
-    // 🔥 PERPANJANGAN (APPROVE & REJECT)
+    // ============================================================
+    // PERPANJANGAN
+    // ============================================================
     Route::patch('/loans/{id}/approve-extend', [LoanController::class, 'approveExtend'])->name('loans.approve-extend');
     Route::patch('/loans/{id}/reject-extend', [LoanController::class, 'rejectExtend'])->name('loans.reject-extend');
     
-    // Pengembalian (halaman khusus)
+    // ============================================================
+    // PENGEMBALIAN (HANYA SATU ROUTE)
+    // ============================================================
     Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
     Route::patch('/pengembalian/{id}/validate', [LoanController::class, 'returnLoan'])->name('pengembalian.validate');
+    // ⚠️ Route lama dihapus: Route::patch('/loans/{id}/return', ...) 
+    // Supaya tidak ada duplikasi, cukup pakai /pengembalian/{id}/validate saja
+    
+    // ============================================================
+    // DENDA (BARU)
+    // ============================================================
+    // Daftar denda yang belum dibayar
+    Route::get('/fines', [LoanController::class, 'unpaidFines'])->name('fines');
+    
+    // Histori pembayaran denda
+    Route::get('/fines/history', [LoanController::class, 'fineHistory'])->name('fines.history');
+    
+    // Validasi pembayaran denda
+    Route::patch('/fines/{id}/pay', [LoanController::class, 'payFine'])->name('fines.pay');
 });
 
 // ============================================================
@@ -122,7 +143,7 @@ Route::get('/api/admin/loans', function () {
     return App\Models\Loan::with(['user', 'book'])
                           ->orderBy('created_at', 'desc')
                           ->get();
-})->middleware('auth');
+})->middleware(['auth', 'role:admin']);
 
 Route::get('/api/books', function () {
     return App\Models\Book::with('category')->get();
@@ -130,21 +151,21 @@ Route::get('/api/books', function () {
 
 Route::get('/api/anggota', function () {
     return App\Models\User::where('role', 'anggota')->get();
-});
+})->middleware(['auth', 'role:admin']);
 
 Route::get('/api/anggota/loans', function () {
     return App\Models\Loan::where('user_id', auth()->id())
                           ->with('book')
                           ->orderBy('created_at', 'desc')
                           ->get();
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);
 
 // API Notifikasi
 Route::get('/api/anggota/notifications', function () {
     return App\Models\Notification::where('user_id', auth()->id())
                                   ->orderBy('created_at', 'desc')
                                   ->get();
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);
 
 Route::patch('/api/anggota/notifications/{id}/read', function ($id) {
     $notif = App\Models\Notification::where('user_id', auth()->id())
@@ -155,11 +176,11 @@ Route::patch('/api/anggota/notifications/{id}/read', function ($id) {
         $notif->save();
     }
     return response()->json(['success' => true]);
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);
 
 Route::patch('/api/anggota/notifications/read-all', function () {
     App\Models\Notification::where('user_id', auth()->id())
                            ->where('is_read', false)
                            ->update(['is_read' => true]);
     return response()->json(['success' => true]);
-})->middleware('auth');
+})->middleware(['auth', 'role:anggota']);

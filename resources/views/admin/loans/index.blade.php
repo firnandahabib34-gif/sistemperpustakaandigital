@@ -11,7 +11,7 @@
 
 <div class="bg-white rounded-xl shadow overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="w-full min-w-[1200px]">
+        <table class="w-full min-w-[1300px]">
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">ID Pinjam</th>
@@ -24,6 +24,7 @@
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Jatuh Tempo</th>
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Tanggal Kembali</th>
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Denda</th>
+                    <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Status Denda</th> <!-- ✅ BARU -->
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Status</th>
                     <th class="px-3 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap">Perpanjang</th>
                     <th class="px-3 py-2 text-center text-xs font-semibold text-gray-600 whitespace-nowrap">Aksi</th>
@@ -46,6 +47,25 @@
                     <td class="px-3 py-2 text-sm font-semibold whitespace-nowrap {{ $loan->fine > 0 ? 'text-red-600' : 'text-gray-500' }}">
                         {{ $loan->fine > 0 ? 'Rp ' . number_format($loan->fine, 0, ',', '.') : '-' }}
                     </td>
+                    
+                    <!-- ✅ BARU: KOLOM STATUS DENDA -->
+                    <td class="px-3 py-2 whitespace-nowrap">
+                        @if($loan->fine > 0)
+                            @if($loan->fine_status == 'belum_bayar')
+                                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-semibold">
+                                    🔴 Belum Bayar
+                                </span>
+                            @elseif($loan->fine_status == 'sudah_bayar')
+                                <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-semibold">
+                                    🟢 Sudah Bayar
+                                </span>
+                            @endif
+                        @else
+                            <span class="text-gray-400 text-xs">-</span>
+                        @endif
+                    </td>
+                    
+                    <!-- KOLOM STATUS PEMINJAMAN -->
                     <td class="px-3 py-2 whitespace-nowrap">
                         @if($loan->status == 'menunggu')
                             <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs">Menunggu</span>
@@ -59,6 +79,8 @@
                             <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">Ditolak</span>
                         @endif
                     </td>
+                    
+                    <!-- KOLOM PERPANJANG -->
                     <td class="px-3 py-2 whitespace-nowrap">
                         @if($loan->extend_status === 'menunggu')
                             <form method="POST" action="{{ route('admin.loans.approve-extend', $loan->id) }}" class="inline">
@@ -79,7 +101,10 @@
                             <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </td>
+                    
+                    <!-- ✅ BARU: KOLOM AKSI (DENGAN TOMBOL BAYAR) -->
                     <td class="px-3 py-2 text-center whitespace-nowrap">
+                        <!-- Approve/Reject Peminjaman -->
                         @if($loan->status == 'menunggu')
                             <form method="POST" action="{{ route('admin.loans.approve', $loan->id) }}" class="inline">
                                 @csrf
@@ -95,7 +120,22 @@
                             <button onclick="kembalikanBuku({{ $loan->id }})" class="bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded text-xs">
                                 Kembali
                             </button>
-                        @else
+                        @endif
+                        
+                        <!-- ✅ BARU: TOMBOL VALIDASI PEMBAYARAN DENDA -->
+                        @if($loan->fine > 0 && $loan->fine_status == 'belum_bayar')
+                            <form method="POST" action="{{ route('admin.fines.pay', $loan->id) }}" class="inline ml-0.5">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" 
+                                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-0.5 rounded text-xs"
+                                        onclick="return confirm('Yakin ingin memvalidasi pembayaran denda Rp {{ number_format($loan->fine, 0, ',', '.') }}?')">
+                                    💰 Bayar
+                                </button>
+                            </form>
+                        @endif
+                        
+                        @if($loan->status != 'menunggu' && $loan->status != 'menunggu_validasi' && !($loan->fine > 0 && $loan->fine_status == 'belum_bayar'))
                             <span class="text-gray-400 text-xs">-</span>
                         @endif
                     </td>

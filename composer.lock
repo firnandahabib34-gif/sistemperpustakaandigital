@@ -4076,7 +4076,7 @@
                 "psr-4": {
                     "Symfony\\Component\\HttpKernel\\": ""
                 },
-                "exclude-from-classmap": [
+                "exclude-from-map": [
                     "/Tests/"
                 ]
             },
@@ -4160,7 +4160,7 @@
                 "psr-4": {
                     "Symfony\\Component\\Mailer\\": ""
                 },
-                "exclude-from-classmap": [
+                "exclude-from-map": [
                     "/Tests/"
                 ]
             },
