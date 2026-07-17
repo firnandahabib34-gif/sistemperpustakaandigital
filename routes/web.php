@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BookController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\AnggotaController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LoanController;
 
@@ -48,6 +49,13 @@ Route::get('/dashboard-anggota', function () {
 // ============================================================
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
     
+    // ============================================================
+    // ROUTE SETTINGS (UPLOAD BACKGROUND & LOGO) ← SUDAH SAYA TAMBAHKAN
+    // ============================================================
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings');
+    Route::post('/settings/upload-background', [SettingController::class, 'uploadBackground'])->name('settings.upload-background');
+    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->name('settings.upload-logo');
+    
     // CRUD Buku
     Route::get('/books', [BookController::class, 'index'])->name('books');
     Route::post('/books', [BookController::class, 'store'])->name('books.store');
@@ -69,10 +77,36 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::put('/anggota/{id}', [AnggotaController::class, 'update'])->name('anggota.update');
     Route::delete('/anggota/{id}', [AnggotaController::class, 'destroy'])->name('anggota.destroy');
     Route::patch('/anggota/{id}/toggle-status', [AnggotaController::class, 'toggleStatus'])->name('anggota.toggle-status');
+    
+    // ============================================================
+    // PEMINJAMAN
+    // ============================================================
+    Route::get('/loans', [LoanController::class, 'index'])->name('loans');
+    Route::patch('/loans/{id}/approve', [LoanController::class, 'approve'])->name('loans.approve');
+    Route::patch('/loans/{id}/reject', [LoanController::class, 'reject'])->name('loans.reject');
+    
+    // ============================================================
+    // PERPANJANGAN
+    // ============================================================
+    Route::patch('/loans/{id}/approve-extend', [LoanController::class, 'approveExtend'])->name('loans.approve-extend');
+    Route::patch('/loans/{id}/reject-extend', [LoanController::class, 'rejectExtend'])->name('loans.reject-extend');
+    
+    // ============================================================
+    // PENGEMBALIAN
+    // ============================================================
+    Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
+    Route::patch('/pengembalian/{id}/validate', [LoanController::class, 'returnLoan'])->name('pengembalian.validate');
+    
+    // ============================================================
+    // DENDA
+    // ============================================================
+    Route::get('/fines', [LoanController::class, 'unpaidFines'])->name('fines');
+    Route::get('/fines/history', [LoanController::class, 'fineHistory'])->name('fines.history');
+    Route::patch('/fines/{id}/pay', [LoanController::class, 'payFine'])->name('fines.pay');
 });
 
 // ============================================================
-// ROUTE UNTUK ANGGOTA (DATABASE)
+// ROUTE UNTUK ANGGOTA
 // ============================================================
 Route::get('/dashboard-anggota/buku', function () {
     $books = App\Models\Book::with('category')->get();
@@ -94,46 +128,7 @@ Route::middleware(['auth', 'role:anggota'])->group(function () {
 });
 
 // ============================================================
-// ROUTE ADMIN UNTUK PEMINJAMAN, PENGEMBALIAN & DENDA
-// ============================================================
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
-    
-    // ============================================================
-    // PEMINJAMAN
-    // ============================================================
-    Route::get('/loans', [LoanController::class, 'index'])->name('loans');
-    Route::patch('/loans/{id}/approve', [LoanController::class, 'approve'])->name('loans.approve');
-    Route::patch('/loans/{id}/reject', [LoanController::class, 'reject'])->name('loans.reject');
-    
-    // ============================================================
-    // PERPANJANGAN
-    // ============================================================
-    Route::patch('/loans/{id}/approve-extend', [LoanController::class, 'approveExtend'])->name('loans.approve-extend');
-    Route::patch('/loans/{id}/reject-extend', [LoanController::class, 'rejectExtend'])->name('loans.reject-extend');
-    
-    // ============================================================
-    // PENGEMBALIAN (HANYA SATU ROUTE)
-    // ============================================================
-    Route::get('/pengembalian', [LoanController::class, 'pengembalian'])->name('pengembalian');
-    Route::patch('/pengembalian/{id}/validate', [LoanController::class, 'returnLoan'])->name('pengembalian.validate');
-    // ⚠️ Route lama dihapus: Route::patch('/loans/{id}/return', ...) 
-    // Supaya tidak ada duplikasi, cukup pakai /pengembalian/{id}/validate saja
-    
-    // ============================================================
-    // DENDA (BARU)
-    // ============================================================
-    // Daftar denda yang belum dibayar
-    Route::get('/fines', [LoanController::class, 'unpaidFines'])->name('fines');
-    
-    // Histori pembayaran denda
-    Route::get('/fines/history', [LoanController::class, 'fineHistory'])->name('fines.history');
-    
-    // Validasi pembayaran denda
-    Route::patch('/fines/{id}/pay', [LoanController::class, 'payFine'])->name('fines.pay');
-});
-
-// ============================================================
-// API ROUTES (Untuk Ambil Data JSON)
+// API ROUTES
 // ============================================================
 Route::get('/api/categories', function () {
     return App\Models\Category::all();
@@ -160,7 +155,6 @@ Route::get('/api/anggota/loans', function () {
                           ->get();
 })->middleware(['auth', 'role:anggota']);
 
-// API Notifikasi
 Route::get('/api/anggota/notifications', function () {
     return App\Models\Notification::where('user_id', auth()->id())
                                   ->orderBy('created_at', 'desc')

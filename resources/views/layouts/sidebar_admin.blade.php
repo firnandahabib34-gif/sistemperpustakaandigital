@@ -49,6 +49,18 @@
             <a href="{{ url('/admin/kategori') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->is('admin/kategori') ? 'bg-blue-600' : '' }}">
                 <i class="fas fa-tags w-5"></i> Kelola Kategori
             </a>
+
+            <!-- ========================================== -->
+            <!-- TAMBAHKAN INI! (MENU SETTINGS)            -->
+            <!-- ========================================== -->
+            <div class="text-blue-200 text-xs mt-4 mb-2">PENGATURAN</div>
+            
+            <!-- Pengaturan Tampilan -->
+            <a href="{{ route('admin.settings') }}" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-600 transition {{ request()->routeIs('admin.settings*') ? 'bg-blue-600' : '' }}">
+                <i class="fas fa-cog w-5"></i> Pengaturan Tampilan
+            </a>
+            <!-- ========================================== -->
+            
         </nav>
     </div>
 
